@@ -4004,6 +4004,18 @@ public class Solo {
 		activityUtils.goBackToActivity(name);
 	}
 
+	private void goBackToActivitySync(String name) {
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				goBackToActivity(name);
+			}
+		});
+		thread.start();
+		sleep(config.sleepDuration);
+		thread.interrupt();
+	}
+
 	/**
 	 * Finish the activity.
 	 * @param activity
@@ -4563,7 +4575,6 @@ public class Solo {
 		waitForActivity(strings[strings.length - 1]);
 		sleep(config.sleepDuration);
 		typeText(0, config.loginAccount);
-		sleep(config.sleepDuration);
 		typeText(1, config.loginPassword);
 		clickOnView(getView(config.loginId));
 		strings = config.homeActivity.split("\\.");
@@ -4948,8 +4959,7 @@ public class Solo {
 			act = cn.getClassName();
 			if (!act.contains(activity)) {
 				String[] names = activity.split("\\.");
-				goBackToActivity(names[names.length - 1]);
-				sleep(config.sleepDuration);
+				goBackToActivitySync(names[names.length - 1]);
 				cn = getRunningTask(context);
 				act = cn.getClassName();
 				if (!act.contains(activity)) {
@@ -4971,8 +4981,7 @@ public class Solo {
 			Log.i(Solo.LOG_TAG, "current Activity " + context + " isShown: " + isShown);
 			if (!isShown) {
 				String[] names = activity.split("\\.");
-				goBackToActivity(names[names.length - 1]);
-				sleep(config.sleepDuration);
+				goBackToActivitySync(names[names.length - 1]);
 				isShown = isShown(context);
 				if (!isShown) {
 					finish(activity);

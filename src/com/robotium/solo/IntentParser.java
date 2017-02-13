@@ -138,10 +138,7 @@ public class IntentParser {
             return Integer.parseInt(strings[1]);
         }else
         if (tmp.equals("string".toLowerCase())) {
-            if (strings.length == 1) {
-                return "";
-            }
-            return strings[1];
+            return strings.length == 1 ? "" : strings[1];
         }else
         if (tmp.equals("double".toLowerCase())) {
             return Double.parseDouble(strings[1]);
