@@ -125,12 +125,15 @@ class Clicker {
 		}
 		int xy1[] = new int[2];
 		view.getLocationOnScreen(xy1);
-		// Remove view that have been clicked.
-		for (HashMap.Entry<Integer, int[]> entry : clickeds.entrySet()) {
-			if (view.getId() == entry.getKey() && xy1[0] == entry.getValue()[0]
-					&& xy1[1] == entry.getValue()[1]) {
-				Log.w(Solo.LOG_TAG, view + " is clicked, ignore it.");
-				return;
+		// If activity is a login activity, has been clicked to continue to click.
+		if (!view.getContext().toString().contains(config.loginActivity)) {
+			// Remove view that have been clicked.
+			for (HashMap.Entry<Integer, int[]> entry : clickeds.entrySet()) {
+				if (view.getId() == entry.getKey() && xy1[0] == entry.getValue()[0]
+						&& xy1[1] == entry.getValue()[1]) {
+					Log.w(Solo.LOG_TAG, view + " is clicked, ignore it.");
+					return;
+				}
 			}
 		}
 		takeScreenshot(view);
