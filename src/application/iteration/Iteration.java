@@ -63,6 +63,13 @@ public class Iteration extends ActivityInstrumentationTestCase2 {
         super.tearDown();
     }
 
+    /**
+     * 登录操作
+     * @throws Exception 抛出异常
+     */
+    public void test_login() throws Exception {
+        solo.login();
+    }
 
     /**
      * 自动遍历入口

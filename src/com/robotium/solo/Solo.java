@@ -4721,7 +4721,6 @@ public class Solo {
 	 * @throws Exception
 	 */
 	public void startIteration() throws Exception{
-		login();
 		switch (config.mode) {
 			case FAST:
 				FastOrNormalMode();
