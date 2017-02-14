@@ -35,6 +35,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.EditorInfo;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.Button;
@@ -82,7 +84,6 @@ import java.util.regex.Pattern;
  *
  * @author Renas Reda, renas.reda@robotium.com
  */
-
 public class Solo {
 
 	protected final Asserter asserter;
@@ -178,6 +179,7 @@ public class Solo {
 
 	public Solo(Instrumentation instrumentation, Config config, Activity activity) {
 		this(config, instrumentation, activity);
+
 		if(config.commandLogging){
 			Log.d(config.commandLoggingTag, "Solo("+instrumentation+", "+config+", "+activity+")");
 		}
@@ -194,7 +196,8 @@ public class Solo {
 
 	private Solo(Config config, Instrumentation instrumentation, Activity activity) {
 		checkConfig(config);
-		new Permission(activity, config.PACKAGE, instrumentation).requestPermissions();
+		new Permission(activity, config.PACKAGE, instrumentation).requestPermissionsForShell();
+
 		if(config.commandLogging){
 			Log.d(config.commandLoggingTag, "Solo("+config+", "+instrumentation+", "+activity+")");
 		}
@@ -3580,21 +3583,22 @@ public class Solo {
 	 * @param params start activity params
 	 * @throws ClassNotFoundException
 	 */
+
     public void handleWeb(String activity, Map<String, Object> params) throws ClassNotFoundException{
-        String url = waitForWebUrl(config.sleepDuration * 10);
+        String url = waitForWebUrl(config.sleepDuration * 20);
         Log.i(LOG_TAG, url);
         if (!TextUtils.isEmpty(url)) {
-            ArrayList<WebElement> webElements= getCurrentWebElements();
+            ArrayList<WebElement> webElements = getCurrentWebElements();
             for (WebElement element: webElements) {
                 if (element.getTagName().toUpperCase().contains("INPUT")) {
                     typeTextInWebElement(By.tagName(element.getTagName()), RandomUtils.getRandomText(10));
-                    sleep(config.sleepDuration);
+                    sleep(config.sleepDuration * 2);
                 } else {
 					takeScreenshot(activity, element);
 					clickOnWebElement(element);
-					sleep(config.sleepDuration);
+					sleep(config.sleepDuration * 2);
 				}
-                String tmp = waitForWebUrl(config.sleepDuration * 6);
+                String tmp = waitForWebUrl(config.sleepDuration * 20);
                 if (!tmp.equals(url)) {
 					goBack();
                     if (!getCurrentActivity().toString().contains(activity)) {
@@ -3607,6 +3611,18 @@ public class Solo {
         } else
             Log.w(LOG_TAG, activity + " WebUrl is null, " + "timeout.");
     }
+
+    public void scrollLeft() {
+		sleep(config.sleepDuration);
+		drag(width / 2, 0, height / 2, height / 2, 1);
+		sleep(config.sleepDuration);
+	}
+
+	public void scrollRight() {
+		sleep(config.sleepDuration);
+		drag(width / 2, width, height / 2, height / 2, 1);
+		sleep(config.sleepDuration);
+	}
 
 	/**
 	 * Pull down to refresh for ListView or RecyclerView
@@ -4596,7 +4612,21 @@ public class Solo {
 	 */
 	public void login() throws Exception{
 		String[] strings = config.homeActivity.split("\\.");
-        waitForActivity(strings[strings.length - 1]);
+        boolean isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+		// 如果等不到主页则迭代当前页面（可能为授权页面弹框）
+		if (!isSuccess) {
+			iterationNode(null, "", null);
+			isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+			// 处理完弹框还等待不到主页，则可能是进入了引导页面
+			while (!isSuccess){
+				scrollLeft();
+				iterationNode(null, "", null);
+				isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+			}
+		}
+		isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+		// 可能存在类似新手引导的界面覆盖了主页，finish
+		if (!isSuccess) finish(getCurrentActivity().getComponentName().getClassName());
         startActivity(context, null, config.loginActivity);
 		handleLogin();
 	}
@@ -4694,7 +4724,7 @@ public class Solo {
 				Log.i(LOG_TAG, node.toString());
 				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 				clickeds.add(string);
-				sleep(config.sleepDuration * 2);
+				sleep(config.sleepDuration);
 				try {
 					handleJump(currentActivity, activity, params);
 					shellCommandStartActivity(node);
@@ -4975,7 +5005,7 @@ public class Solo {
 		Log.i(Solo.LOG_TAG, "current Activity " + context + " isShown: " + isShown);
 		if (!isShown) {
 			goBack();
-			sleep(config.sleepDuration);
+			sleep(config.sleepDuration / 5);
 			isShown = isShown(context);
 			Log.i(Solo.LOG_TAG, "current Activity " + context + " isShown: " + isShown);
 			if (!isShown) {
@@ -5559,4 +5589,5 @@ public class Solo {
 			return defaultValue;
 		}
 	}
+
 }

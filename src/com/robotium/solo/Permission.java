@@ -122,6 +122,22 @@ class Permission {
                     } else handlePermissions(event, PACKAGE_INSTALLER, PERMISSION_ALLOW_ID);
                 }
             });
+
+        }
+    }
+
+    /**
+     * Requests permissions to be granted to this application.
+     * adb shell pm grant package android.permission.*
+     */
+    void requestPermissionsForShell() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            String[] permissions = checkPermissions();
+            if (permissions == null) return;
+            UiAutomation uiAutomation = instrumentation.getUiAutomation();
+            for (String permission: permissions) {
+                uiAutomation.executeShellCommand("pm grant " + pkg + " " + permission);
+            }
         }
     }
 
