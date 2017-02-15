@@ -5101,7 +5101,7 @@ public class Solo {
 					handleOtherView(activity, params);
 				}
 			}
-		}
+		} else iterationNode(null, activity, params);
 	}
 
 	/**
