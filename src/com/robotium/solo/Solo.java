@@ -4589,7 +4589,12 @@ public class Solo {
 		String[] strings = config.loginActivity.split("\\.");
 		waitForActivity(strings[strings.length - 1]);
 		sleep(config.sleepDuration);
+		clearEditText(0);
+		sleep(100);
 		typeText(0, config.loginAccount);
+		sleep(100);
+		clearEditText(1);
+		sleep(100);
 		typeText(1, config.loginPassword);
 		clickOnView(getView(config.loginId));
 		strings = config.homeActivity.split("\\.");
