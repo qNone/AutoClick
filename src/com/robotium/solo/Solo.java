@@ -1,6 +1,5 @@
 package com.robotium.solo;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
@@ -35,8 +34,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.EditorInfo;
-import android.webkit.JavascriptInterface;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.Button;
@@ -268,6 +265,8 @@ public class Solo {
 
 			}
 		};
+
+		CrashHandler.getInstance().init(activity.getApplicationContext());
 		initialize();
 	}
 
@@ -4612,19 +4611,20 @@ public class Solo {
 	 */
 	public void login() throws Exception{
 		String[] strings = config.homeActivity.split("\\.");
-        boolean isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+		String homeActivity = strings[strings.length - 1];
+        boolean isSuccess = waitForActivity(homeActivity, 5000);
 		// 如果等不到主页则迭代当前页面（可能为授权页面弹框）
 		if (!isSuccess) {
 			iterationNode(null, "", null);
-			isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+			isSuccess = waitForActivity(homeActivity, 3000);
 			// 处理完弹框还等待不到主页，则可能是进入了引导页面
 			while (!isSuccess){
 				scrollLeft();
 				iterationNode(null, "", null);
-				isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+				isSuccess = waitForActivity(homeActivity, 2000);
 			}
 		}
-		isSuccess = waitForActivity(strings[strings.length - 1], 5000);
+		isSuccess = waitForActivity(homeActivity, 5000);
 		// 可能存在类似新手引导的界面覆盖了主页，finish
 		if (!isSuccess) finish(getCurrentActivity().getComponentName().getClassName());
         startActivity(context, null, config.loginActivity);
