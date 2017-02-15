@@ -4677,7 +4677,9 @@ public class Solo {
 					performClick(node, activity, params);
 				}
 			}
-		}catch (NullPointerException ignored){}
+		}catch (NullPointerException ignored){}catch (StackOverflowError e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
