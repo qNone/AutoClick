@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +75,7 @@ public class AcrossApplication {
             }
         });
         sleep(config.sleepDuration * 4);
-        uiAutomation.executeShellCommand("input keyevent 27");
+        shellCommand("input keyevent 27");
     }
 
     /**
@@ -146,7 +147,7 @@ public class AcrossApplication {
      * @param text the text, Does not support Chinese.
      */
     public void acrossForEnterText(String text){
-        shellCommand(uiAutomation, "input text " + text);
+        shellCommand("input text " + text);
     }
 
     /**
@@ -233,43 +234,69 @@ public class AcrossApplication {
      * @param pkg package
      * @return the application is installed on the device.
      */
-    private boolean isInstalled(String pkg){
-        String s = shellCommand(uiAutomation, "pm list packages " + pkg);
+    private boolean isInstalled(String pkg) {
+        String s = shellCommand("pm list packages " + pkg);
         return s.contains(pkg);
+    }
+
+    public static StringBuilder getRuntime(String command){
+        StringBuilder sb = new StringBuilder();
+        Process p = null;
+        try {
+            p = Runtime.getRuntime().exec(command);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (p != null){
+            BufferedInputStream in = new BufferedInputStream(p.getInputStream());
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            String line;
+            try {
+                while ((line = br.readLine()) != null) {
+                    sb.append(line).append(System.getProperty("line.separator"));
+                }
+                in.close();
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb;
     }
 
     /**
      * Executes a shell command. This method returs a file descriptor that points
      * to the standard output stream. The command execution is similar to running
      * "adb shell <command>" from a host connected to the device.
-     * @param uiAutomation uiAutomation
      * @param command The command to execute.
      * @return result
      */
-    private String shellCommand(UiAutomation uiAutomation, String command){
-        ParcelFileDescriptor parcelFileDescriptor = uiAutomation.executeShellCommand(command);
-        InputStream is = new ParcelFileDescriptor.AutoCloseInputStream(parcelFileDescriptor);
+    private String shellCommand(String command){
         StringBuilder sb = new StringBuilder();
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new InputStreamReader(is));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append(System.getProperty("line.separator"));
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ParcelFileDescriptor parcelFileDescriptor = uiAutomation.executeShellCommand(command);
+            InputStream is = new ParcelFileDescriptor.AutoCloseInputStream(parcelFileDescriptor);
+            BufferedReader reader = null;
             try {
-                if (reader != null) {
-                    reader.close();
+                reader = new BufferedReader(new InputStreamReader(is));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append(System.getProperty("line.separator"));
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+            } finally {
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
-        }
+        } else return getRuntime(command).toString();
         return sb.toString();
     }
 }

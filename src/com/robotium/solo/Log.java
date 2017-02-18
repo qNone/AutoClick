@@ -1,5 +1,10 @@
 package com.robotium.solo;
 
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.support.v4.content.ContextCompat;
+
 public final class Log {
 
     public Log() {
@@ -21,9 +26,14 @@ public final class Log {
         android.util.Log.e(tag, msg);
     }
 
-    public static void v(String tag, String msg) {
-        FileUtils.writeLog(TimeUtils.getDate() + " V/" + tag + ": " + msg);
-        android.util.Log.v(tag, msg);
+    public static void v(String tag, String msg, Context context) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+            int mPermission = ContextCompat.checkSelfPermission(context, Permission.WRITE_EXTERNAL_STORAGE);
+            if (mPermission == PackageManager.PERMISSION_GRANTED) {
+                FileUtils.writeLog(TimeUtils.getDate() + " V/" + tag + ": " + msg);
+                android.util.Log.v(tag, msg);
+            }
+        }
     }
 
     public static void w(String tag, String msg) {

@@ -8,6 +8,8 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import junit.framework.Assert;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
@@ -28,6 +30,7 @@ class CrashHandler implements UncaughtExceptionHandler {
 	private UncaughtExceptionHandler mDefaultHandler;
 	private static CrashHandler instance;
 	private Context mContext;
+	private Solo.Config config;
 	private Map<String, String> infos = new HashMap<>();
 	private DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
 
@@ -35,14 +38,20 @@ class CrashHandler implements UncaughtExceptionHandler {
 	}
 
 	public static CrashHandler getInstance() {
-		if (instance == null)
-			instance = new CrashHandler();
+		if (instance == null) {
+			synchronized (CrashHandler.class) {
+				if (instance == null) {
+					instance = new CrashHandler();
+				}
+			}
+		}
 		return instance;
 	}
 
-	void init(Context context) {
-		mContext = context;
-		mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+	void init(Context context, Solo.Config config) {
+		this.mContext = context;
+		this.config = config;
+		this.mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
 		Thread.setDefaultUncaughtExceptionHandler(this);
 	}
 
@@ -51,18 +60,20 @@ class CrashHandler implements UncaughtExceptionHandler {
 		if (!handleException(ex) && mDefaultHandler != null) {
 			mDefaultHandler.uncaughtException(thread, ex);
 		} else {
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				Log.e(Solo.LOG_TAG, "error: ", e);
-			}
-			exitApplication();
 			rebootApplication();
+			exitApplication();
 		}
 	}
 
 	private void rebootApplication() {
-		android.util.Log.i("crash", "111");
+		android.content.Intent intent = new android.content.Intent();
+		SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
+		String cls = helper.getString(SharedPreferencesHelper.CLASS);
+		intent.setAction("Auto.Monitor");
+		intent.putExtra("package", config.PACKAGE);
+		intent.putExtra("class", cls);
+		intent.putExtra("runner", config.runner);
+		mContext.sendBroadcast(intent);
 	}
 
 	private void exitApplication() {
@@ -122,13 +133,15 @@ class CrashHandler implements UncaughtExceptionHandler {
 		}
 		printWriter.close();
 		String result = writer.toString();
-		sb.append("\n");
+		sb.append(System.getProperty("line.separator"));
 		sb.append(result);
 		try {
 			String time = formatter.format(new Date());
 			String fileName = "crash - " + time  + ".log";
 			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-				File dir = new File(Environment.getExternalStorageDirectory(), Solo.Config.PATH + "/Log");
+				String pkg = PackageSingleton.getInstance().getPkg();
+				File dir = new File(Environment.getExternalStorageDirectory(),
+						String.format(Solo.Config.PATH, pkg) + "/Log");
 				if (!dir.exists()) {
 					dir.mkdirs();
 				}

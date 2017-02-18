@@ -70,7 +70,7 @@ class Permission {
      * SD Card
      **/
     private static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE";
-    private static final String WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
+    public static final String WRITE_EXTERNAL_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE";
 
     /**
      * Package Installer
@@ -107,7 +107,7 @@ class Permission {
      * Requests permissions to be granted to this application.
      */
     void requestPermissions(){
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String[] permissions = checkPermissions();
             if (permissions == null || permissions.length == 0) return;
             final String manufacturer = getManufacturer();
@@ -131,7 +131,7 @@ class Permission {
      * adb shell pm grant package android.permission.*
      */
     void requestPermissionsForShell() {
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String[] permissions = checkPermissions();
             if (permissions == null) return;
             UiAutomation uiAutomation = instrumentation.getUiAutomation();

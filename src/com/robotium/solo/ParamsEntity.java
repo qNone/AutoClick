@@ -2,9 +2,14 @@ package com.robotium.solo;
 
 import java.util.ArrayList;
 
-public class Params {
-	
-	public boolean iteration;
+public class ParamsEntity {
+
+	private boolean iteration;
+
+	private boolean web;
+
+	private String name;
+	private ArrayList<ParamEntity> params;
 
 	public boolean isWeb() {
 		return web;
@@ -14,8 +19,6 @@ public class Params {
 		this.web = web;
 	}
 
-	public boolean web;
-
 	public boolean isIteration() {
 		return iteration;
 	}
@@ -24,16 +27,7 @@ public class Params {
 		this.iteration = iteration;
 	}
 
-	public ArrayList<Param> getParams() {
-		return params;
-	}
-
-	public void setParams(ArrayList<Param> params) {
-		this.params = params;
-	}
-
 	public String getName() {
-
 		return name;
 	}
 
@@ -41,13 +35,18 @@ public class Params {
 		this.name = name;
 	}
 
-	public String name;
-	public ArrayList<Param> params;
+	public ArrayList<ParamEntity> getParams() {
+		return params;
+	}
+
+	public void setParams(ArrayList<ParamEntity> params) {
+		this.params = params;
+	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof Params) {
-			Params param = (Params) o;
+		if (o instanceof ParamsEntity) {
+			ParamsEntity param = (ParamsEntity) o;
 			return getName().equals(param.getName());
 		}
 		return super.equals(o);

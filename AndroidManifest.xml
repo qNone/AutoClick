@@ -5,13 +5,15 @@
     android:versionName="1.0">
 
     <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <uses-sdk 
-        android:minSdkVersion="18"
-        android:targetSdkVersion="24" />
+        android:minSdkVersion="19"
+        android:targetSdkVersion="25" />
 
     <instrumentation
-        android:name="android.test.InstrumentationTestRunner"
+        android:name="com.robotium.solo.InstrumentationTestRunner"
         android:targetPackage="被测应用包名" />
 
     <application

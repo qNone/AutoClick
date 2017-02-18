@@ -1,6 +1,9 @@
 package com.robotium.solo;
 
-public class Param {
+public class ParamEntity {
+
+	private String key;
+	private String value;
 
 	public String getValue() {
 		return value;
@@ -18,8 +21,5 @@ public class Param {
 	public void setKey(String key) {
 		this.key = key;
 	}
-
-	public String key;
-	public String value;
 
 }

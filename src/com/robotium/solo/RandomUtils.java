@@ -32,7 +32,7 @@ public class RandomUtils {
 
     static String getRandomText(int length){
         if (length <= 0) length = 10;
-        if (length >= 500) length = 500;
+        if (length >= 200) length = 200;
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
         for (int i = 0; i < length; i++) {

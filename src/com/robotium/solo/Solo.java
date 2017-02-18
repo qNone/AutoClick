@@ -130,6 +130,7 @@ public class Solo {
 	public final static int CLOSED = 0;
 	public final static int OPENED = 1;
 	public final static String LOG_TAG = "Robotium";
+	private final static String DAEMON = "com.heyniu.monitor";
 
     private int width;
 	private int height;
@@ -178,7 +179,7 @@ public class Solo {
 		this(config, instrumentation, activity);
 
 		if(config.commandLogging){
-			Log.d(config.commandLoggingTag, "Solo("+instrumentation+", "+config+", "+activity+")");
+			Log.v(config.commandLoggingTag, "Solo("+instrumentation+", "+config+", "+activity+")", context);
 		}
 	}
 
@@ -192,11 +193,9 @@ public class Solo {
 	 */
 
 	private Solo(Config config, Instrumentation instrumentation, Activity activity) {
-		checkConfig(config);
-		new Permission(activity, config.PACKAGE, instrumentation).requestPermissionsForShell();
-
+		customInit(config, instrumentation, activity);
 		if(config.commandLogging){
-			Log.d(config.commandLoggingTag, "Solo("+config+", "+instrumentation+", "+activity+")");
+			Log.v(config.commandLoggingTag, "Solo("+config+", "+instrumentation+", "+activity+")", activity);
 		}
 		
 		this.config = (config == null) ? new Config(): config;
@@ -237,7 +236,6 @@ public class Solo {
 
 			@Override
 			public void onActivityStarted(Activity activity) {
-
 			}
 
 			@Override
@@ -266,8 +264,70 @@ public class Solo {
 			}
 		};
 
-		CrashHandler.getInstance().init(activity.getApplicationContext());
 		initialize();
+	}
+
+	private void customInit(Config config, Instrumentation instrumentation, Activity activity) {
+		checkConfig(config);
+		PackageSingleton.getInstance().setPkg(config.PACKAGE);
+		startMonitor(instrumentation);
+		authorizationMonitor(instrumentation);
+		new Permission(activity, config.PACKAGE, instrumentation).requestPermissionsForShell();
+	}
+
+	private void checkRunner() {
+		SharedPreferencesHelper helper = new SharedPreferencesHelper(instrumentation.getTargetContext(),
+				SharedPreferencesHelper.ARGUMENTS);
+		String runner = helper.getString(SharedPreferencesHelper.RUNNER);
+		if (runner != null) config.runner = runner;
+		Log.d(LOG_TAG, "Runner: " + config.runner);
+	}
+
+	private void checkNative() {
+		SharedPreferencesHelper helper = new SharedPreferencesHelper(instrumentation.getTargetContext(),
+				SharedPreferencesHelper.ARGUMENTS);
+		String useNative = helper.getString(SharedPreferencesHelper.USE_NATIVE);
+		if (useNative != null && useNative.contains("true")) config.useNative = true;
+		Log.d(LOG_TAG, "Use Native: " + config.useNative);
+	}
+
+	private void checkReptile() {
+		SharedPreferencesHelper helper = new SharedPreferencesHelper(instrumentation.getTargetContext(),
+				SharedPreferencesHelper.ARGUMENTS);
+		String newReptile = helper.getString(SharedPreferencesHelper.NEW_REPTILE);
+		if (newReptile != null && newReptile.contains("false")) config.newReptile = false;
+		if (config.mode == Config.Mode.REPTILE)
+			Log.d(LOG_TAG, "New Reptile: " + config.newReptile);
+	}
+
+	private void authorizationMonitor(Instrumentation instrumentation) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
+		UiAutomation uiAutomation = instrumentation.getUiAutomation();
+		if (uiAutomation == null) return;
+		uiAutomation.executeShellCommand("pm grant " + DAEMON + " " + Permission.WRITE_EXTERNAL_STORAGE);
+	}
+
+	/**
+	 *  Quit the Monitor.
+	 */
+	private void quitMonitor() {
+		Log.i(LOG_TAG, "Iteration is complete.");
+		android.content.Intent intent = new android.content.Intent();
+		intent.setAction("Auto.Monitor.quit");
+		context.sendBroadcast(intent);
+	}
+
+	/**
+	 * Start the Monitor.
+	 * @param instrumentation instrumentation
+	 */
+	private void startMonitor(Instrumentation instrumentation) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return;
+		UiAutomation uiAutomation = instrumentation.getUiAutomation();
+		if (uiAutomation == null) return;
+		String command = "am start -n " + DAEMON + "/" + DAEMON + ".MainActivity";
+		Log.i(LOG_TAG, "adb shell " + command);
+		uiAutomation.executeShellCommand(command);
 	}
 
 	/**
@@ -329,24 +389,19 @@ public class Solo {
 		public int timeout_large = 20000;
 
 		/**
-		 * The screenshot save path. Default save path is /sdcard/AutoClick-Screenshots/.
+		 * The screenshot save path. Default save path is /sdcard/AutoClick/package/Screenshots/.
 		 */
-		public static final String screenshotSavePath = Environment.getExternalStorageDirectory() + "/AutoClick/Screenshots/";
+		public static final String screenshotSavePath = Environment.getExternalStorageDirectory() + "/AutoClick/%s/Screenshots/";
 
 		/**
-		 * The Robotium save path. Default save path is /sdcard/AutoClick/.
+		 * The Robotium save path. Default save path is /sdcard/AutoClick/package.
 		 */
-		public static final String PATH = "/AutoClick";
+		public static final String PATH = "/AutoClick/%s";
 
 		/**
 		 * Iterated activities.
 		 */
 		public static final String ACTIVITY = "Activities.txt";
-
-		/**
-		 * Test results.
-		 */
-		public static final String RESULT = "Result.txt";
 
 		/**
 		 * Custom Intent record the activity parameters.
@@ -490,6 +545,22 @@ public class Solo {
 		 * If true, keep activities ScreenShots.
 		 */
 		public boolean keepActivitiesScreenShots = true;
+
+		/**
+		 * If true, Clean up the data at reptile mode.
+		 * Initialize the data.
+		 */
+		public boolean newReptile = true;
+
+		/**
+		 * If true, use the handleNative method iteration.
+		 */
+		public boolean useNative = false;
+
+		/**
+		 * Android test runner.
+		 */
+		public String runner;
 
 	}
 
@@ -4543,14 +4614,14 @@ public class Solo {
 	private void handleParams() throws Exception {
 		String json = FileUtils.readJson();
 		Log.i(LOG_TAG, "json: " + json);
-		ArrayList<Params> arrayList = filterActivities(JsonParser.fromJson(json), activityUtils.getAllActivities(context));
+		ArrayList<ParamsEntity> arrayList = filterActivities(JsonParser.fromJson(json), activityUtils.getAllActivities(context));
 		Log.d(LOG_TAG, "Params size: " + arrayList.size());
-		for (Params params : arrayList) {
+		for (ParamsEntity params : arrayList) {
 			boolean isIgnore = false;
-			Log.d(LOG_TAG, "Activity: " + params.name);
-			if(config.mode == Config.Mode.REPTILE && params.name.contains(config.homeActivity))continue;
+			Log.d(LOG_TAG, "Activity: " + params.getName());
+			if(config.mode == Config.Mode.REPTILE && params.getName().contains(config.homeActivity))continue;
 			for (String name: config.ignoreActivities) {
-				if (params.name.contains(name)) {
+				if (params.getName().contains(name)) {
 					isIgnore = true;
 					break;
 				}
@@ -4558,12 +4629,12 @@ public class Solo {
 			Log.d(LOG_TAG, "Ignore: " + isIgnore);
 			if (!isIgnore) {
 				Map<String, Object> hashMap = new HashMap<String, Object>();
-				for (Param param : params.params) {
-					Log.d(LOG_TAG, param.key + " " + param.value);
-					hashMap.put(param.key.split("\\|")[1], IntentParser.parseType(param.value));
+				for (ParamEntity param : params.getParams()) {
+					Log.d(LOG_TAG, param.getKey() + " " + param.getValue());
+					hashMap.put(param.getKey().split("\\|")[1], IntentParser.parseType(param.getValue()));
 				}
-				iteration(params.name, hashMap.isEmpty() ? null : hashMap,
-						config.mode != Config.Mode.FAST && params.iteration, params.web);
+				iteration(params.getName(), hashMap.isEmpty() ? null : hashMap,
+						config.mode != Config.Mode.FAST && params.isIteration(), params.isWeb());
 			}
 		}
 	}
@@ -4571,11 +4642,11 @@ public class Solo {
 	/**
 	 * If the activity not in target application, remove it.
 	 */
-	private ArrayList<Params> filterActivities(ArrayList<Params> arrayList, ActivityInfo[] activities) {
-		ArrayList<Params> filterActivities = new ArrayList<>();
-		for (Params params : arrayList) {
+	private ArrayList<ParamsEntity> filterActivities(ArrayList<ParamsEntity> arrayList, ActivityInfo[] activities) {
+		ArrayList<ParamsEntity> filterActivities = new ArrayList<>();
+		for (ParamsEntity params : arrayList) {
 			for (ActivityInfo activity: activities){
-				if (activity.name.contains(params.name)) filterActivities.add(params);
+				if (activity.name.contains(params.getName())) filterActivities.add(params);
 			}
 		}
 		return filterActivities;
@@ -4644,6 +4715,9 @@ public class Solo {
 		String[] strings = config.homeActivity.split("\\.");
 		waitForActivity(strings[strings.length - 1]);
 		sleep(config.sleepDuration * 6);
+		if (!FileUtils.existsJson()) {
+			JsonParser.createJson();
+		}
 		handleParams();
 	}
 
@@ -4655,12 +4729,38 @@ public class Solo {
 		String[] strings = config.homeActivity.split("\\.");
 		waitForActivity(strings[strings.length - 1]);
 		sleep(config.sleepDuration * 10);
-		iteration(config.homeActivity, null, true, false);
+		if (config.newReptile) {
+			iteration(config.homeActivity, null, true, false);
+			loopReptile();
+		} else {
+			boolean result = FileUtils.existsJson();
+			if (!result) throw new RuntimeException(config.homeActivity +
+					" may be happen crash, please check the log.");
+			handleParams();
+			loopReptile();
+		}
+	}
+
+	private void loopReptile() throws Exception{
 		JsonParser.updateJson();
 		while (FileUtils.existsJson()) {
 			handleParams();
 			JsonParser.updateJson();
 		}
+	}
+
+	private void checkResult() {
+		if (config.mode == Config.Mode.RECORD) return;
+		boolean isExists = FileUtils.existsForActivity();
+		if (!isExists) return;
+		boolean isFinish = JsonParser.isFinish();
+		Log.i(LOG_TAG, "Finish: " + isFinish);
+		if (!isFinish) {
+			JsonParser.updateParams();
+		} else {
+			quitMonitor();
+		}
+		sleep(config.sleepDuration);
 	}
 
 	/**
@@ -4682,26 +4782,8 @@ public class Solo {
 					performClick(node, activity, params);
 				}
 			}
-		}catch (NullPointerException ignored){}catch (StackOverflowError e){
+		}catch (NullPointerException | StackOverflowError e){
 			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * If the handleJump method fails to process the jump, use the adb shell command to start the activity.
-	 * @param node AccessibilityNodeInfo
-	 */
-	private void shellCommandStartActivity(AccessibilityNodeInfo node) {
-		if (node != null && !config.PACKAGE.contains(node.getPackageName().toString())){
-			String launcherActivity = activityUtils.getLauncherActivity(context);
-			if (launcherActivity != null) {
-				String command = "am start -n " + config.PACKAGE + "/" + launcherActivity;
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-					Log.i(LOG_TAG, "adb shell " + command);
-					uiAutomation.executeShellCommand(command);
-				}
-				sleep(config.sleepDuration * 6);
-			}
 		}
 	}
 
@@ -4728,13 +4810,12 @@ public class Solo {
 				if (config.iterationScreenShots) {
 					screenshotTaker.takeScreenshotForUiAutomation(string, activity);
 				}
-				Log.i(LOG_TAG, node.toString());
+				Log.w(LOG_TAG, node.toString());
 				node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 				clickeds.add(string);
 				sleep(config.sleepDuration);
 				try {
 					handleJump(currentActivity, activity, params);
-					shellCommandStartActivity(node);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -4758,6 +4839,9 @@ public class Solo {
 	 * @throws Exception
 	 */
 	public void startIteration() throws Exception{
+		CrashHandler.getInstance().init(instrumentation.getTargetContext().getApplicationContext(),
+				config);
+		checkResult();
 		switch (config.mode) {
 			case FAST:
 				FastOrNormalMode();
@@ -4797,13 +4881,12 @@ public class Solo {
 			takeScreenshot("Activities/" + s[s.length - 1]);
 		}
 		if (iteration) {
-			if (isWeb) {
-				handleWeb(activity, params);
-			} else {
+			if (isWeb) handleWeb(activity, params);
+			if (config.useNative) handleNative(activity, params);
+			else {
 				if (Build.VERSION.SDK_INT >= 18) {
-					if (activity.contains(config.homeActivity)) {
-						handleFragmentTabHost(activity, params, true);
-					} else iterationNode(null, activity, params);
+					if (activity.contains(config.homeActivity)) handleFragmentTabHost(activity, params, true);
+					else handleViewPager(activity, params, true);
 				}else handleNative(activity, params);
 			}
 		}
@@ -4821,7 +4904,7 @@ public class Solo {
 	 */
 	private void handleNative(String activity, Map<String, Object> params) throws Exception{
 		handleFragmentTabHost(activity, params, false);
-		handleViewPager(activity, params);
+		handleViewPager(activity, params, false);
 		handleRecyclerView(activity, params);
 		handleListView(activity, params);
 		handleGridView(activity, params);
@@ -4976,6 +5059,7 @@ public class Solo {
 	 * @throws Exception
 	 */
 	private boolean handleJump(Activity context, String activity, Map<String, Object> params) throws Exception{
+//		if (config.useNative)
 		ComponentName cn = getRunningTask(context);
 		String pkg = cn.getPackageName();
 		String act = cn.getClassName();
@@ -5037,7 +5121,7 @@ public class Solo {
 	 * @param params
 	 * @throws Exception
 	 */
-	private void handleViewPager(String activity, Map<String, Object> params) throws Exception{
+	private void handleViewPager(String activity, Map<String, Object> params, boolean isUiAutomation) throws Exception{
 		ArrayList<ViewPager> viewPagers = getCurrentViews(ViewPager.class);
 		if (viewPagers.size() > 0) {
 			Log.d(Solo.LOG_TAG, "Find viewPager: " + viewPagers.get(0).toString());
@@ -5049,6 +5133,8 @@ public class Solo {
 			int size = viewPager.getAdapter().getCount();
 			Log.d(Solo.LOG_TAG, "ViewPager size: " + size);
 			for (int i = 0; i < size; i ++) {
+				if (viewPager == null) return;
+
 				final int tab = i;
 				if (viewPager.getAdapter() instanceof PagerAdapter) {
 					viewPager.post(new Runnable() {
@@ -5059,15 +5145,23 @@ public class Solo {
 					});
 					Log.d(Solo.LOG_TAG, "ViewPager setCurrentItem(" + i + ")");
 					sleep(config.sleepDuration * 2);
-					handleListView(activity, params);
-					handleOtherView(activity, params);
+
+					if (isUiAutomation) iterationNode(null, activity, params);
+					else {
+						handleListView(activity, params);
+						handleRecyclerView(activity, params);
+						handleGridView(activity, params);
+						handleScrollView(activity, params);
+						handleOtherView(activity, params);
+					}
+
 				} else
 				if (viewPager.getAdapter() instanceof FragmentPagerAdapter || viewPager.getAdapter() instanceof FragmentStatePagerAdapter) {
 					handleRecyclerView(activity, params);
 				}
 			}
 
-		}
+		} else iterationNode(null, activity, params);
 	}
 
 	/**
@@ -5088,6 +5182,8 @@ public class Solo {
 			int size = ((ArrayList) fieldFragment.get(fragmentTabHost)).size();
 			Log.d(Solo.LOG_TAG, "FragmentTabHost size: " + size);
 			for (int i = 0; i < size; i ++) {
+				if (fragmentTabHost == null) return;
+
 				final int tab = i;
 				try {
 					fragmentTabHost.post(new Runnable() {
@@ -5099,12 +5195,15 @@ public class Solo {
 				} catch (IllegalStateException ignored){}
 				Log.d(Solo.LOG_TAG, "FragmentTabHost setCurrentTab(" + i + ")");
 				sleep(config.sleepDuration * 4);
-				if (isUiAutomation) iterationNode(null, activity, params);
+				if (isUiAutomation) {
+					handleViewPager(activity, params, true);
+				}
 				else {
 					handleListView(activity, params);
 					handleRecyclerView(activity, params);
 					handleGridView(activity, params);
-					handleViewPager(activity, params);
+					handleViewPager(activity, params, false);
+					handleScrollView(activity, params);
 					handleOtherView(activity, params);
 				}
 			}
@@ -5540,17 +5639,18 @@ public class Solo {
 
 	private void initialize(){
 		if(config.commandLogging){
-			Log.d(config.commandLoggingTag, "initialize()");
+			Log.v(config.commandLoggingTag, "initialize()", context);
 		}
 
-		Log.i(LOG_TAG, "setUp()");
-		Log.i(LOG_TAG, "Iteration mode is " + config.mode.toString().toLowerCase());
-		if (config.mode == Config.Mode.REPTILE) {
-			Log.i(LOG_TAG, "Clear data.");
-			FileUtils.deleteJson();
-			FileUtils.deleteActivity();
-			FileUtils.deleteParams();
-			FileUtils.deleteLog();
+		checkReptile();
+		checkNative();
+		checkRunner();
+
+		Log.v(LOG_TAG, "setUp()", context);
+		Log.v(LOG_TAG, "Iteration mode is " + config.mode.toString().toLowerCase(), context);
+		// If mode is reptile to clean up the data.
+		if (config.mode == Config.Mode.REPTILE && config.newReptile) {
+			clearData();
 		}
 		
 		Timeout.setLargeTimeout(initializeTimeout("solo_large_timeout", config.timeout_large));
@@ -5559,11 +5659,22 @@ public class Solo {
         int [] wh = DesignUtils.getDisplayWH(context);
         width = wh[0];
         height = wh[1];
-        Log.i(LOG_TAG, "The device width: " + width);
-        Log.i(LOG_TAG, "The device height: " + height);
+		Log.v(LOG_TAG, "The device width: " + width, context);
+		Log.v(LOG_TAG, "The device height: " + height, context);
 
 		config.sleepDuration = changeSleepStandard();
 		application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
+	}
+
+	/**
+	 * Initialize the data.
+	 */
+	private void clearData() {
+		Log.v(LOG_TAG, "Clear data.", context);
+		FileUtils.deleteJson();
+		FileUtils.deleteActivity();
+		FileUtils.deleteParams();
+		FileUtils.deleteLog();
 	}
 
 	/**

@@ -20,7 +20,9 @@ public class FileUtils {
 	}
 
 	public static void writeObject(Object obj){
-		File file = new File(Environment.getExternalStorageDirectory(), Solo.Config.PATH + "/Object");
+		String pkg = PackageSingleton.getInstance().getPkg();
+		File file = new File(Environment.getExternalStorageDirectory(),
+				String.format(Solo.Config.PATH, pkg) + "/Object");
 		if (!file.exists()) {
 			file.mkdirs();
 		}
@@ -32,6 +34,7 @@ public class FileUtils {
 			oos.close();
 			fos.close();
 		} catch (IOException e) {
+			Log.w(Solo.LOG_TAG, "Object Not Serializable: " + obj);
 			e.printStackTrace();
 		}
 	}
@@ -42,7 +45,9 @@ public class FileUtils {
 	 * @return Object
 	 */
 	public static Object readObject(String name){
-		File file = new File(Environment.getExternalStorageDirectory(), Solo.Config.PATH + "/Object");
+		String pkg = PackageSingleton.getInstance().getPkg();
+		File file = new File(Environment.getExternalStorageDirectory(),
+				String.format(Solo.Config.PATH, pkg) + "/Object");
 		if (!file.exists()) {
 			file.mkdirs();
 		}
@@ -89,16 +94,18 @@ public class FileUtils {
 
 
 	public static boolean existsJson() {
+		String pkg = PackageSingleton.getInstance().getPkg();
 		File file = new File(Environment.getExternalStorageDirectory(),
-				Solo.Config.PATH + "/" + Solo.Config.JSON);
+				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.JSON);
 		return file.exists();
 	}
 
 	public static void deleteLog() {
+		String pkg = PackageSingleton.getInstance().getPkg();
 		File file = new File(Environment.getExternalStorageDirectory(),
-				Solo.Config.PATH + "/" + Solo.Config.LOG);
+				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.LOG);
 		if (file.exists()) {
-			boolean b= file.delete();
+			boolean b = file.delete();
 			Log.d(Solo.LOG_TAG, "Delete result: " + b + " " + file.getAbsolutePath());
 		}
 	}
@@ -108,7 +115,8 @@ public class FileUtils {
 	 * @param name activity full name e.g: com.xx.xxActivity
 	 */
 	public static void deleteScreenShots(String name){
-		File file = new File(Solo.Config.screenshotSavePath, name);
+		String pkg = PackageSingleton.getInstance().getPkg();
+		File file = new File(String.format(Solo.Config.screenshotSavePath, pkg), name);
 		Log.d(Solo.LOG_TAG, "deleteScreenShots: " + file.getAbsolutePath());
 		try {
 			Runtime.getRuntime().exec("rm -rf " + file.getAbsolutePath());
@@ -118,26 +126,35 @@ public class FileUtils {
 	}
 
 	public static void deleteJson() {
+		String pkg = PackageSingleton.getInstance().getPkg();
 		File file = new File(Environment.getExternalStorageDirectory(),
-				Solo.Config.PATH + "/" + Solo.Config.JSON);
+				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.JSON);
 		if (file.exists()) {
-			boolean b= file.delete();
+			boolean b = file.delete();
 			Log.d(Solo.LOG_TAG, "Delete result: " + b + " " + file.getAbsolutePath());
 		}
 	}
 
 	public static void deleteParams() {
+		String pkg = PackageSingleton.getInstance().getPkg();
 		File file = new File(Environment.getExternalStorageDirectory(),
-				Solo.Config.PATH + "/" + Solo.Config.PARAMS);
+				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.PARAMS);
 		if (file.exists()) {
-			boolean b= file.delete();
+			boolean b = file.delete();
 			Log.d(Solo.LOG_TAG, "Delete result: " + b + " " + file.getAbsolutePath());
 		}
 	}
 
+	public static boolean existsForActivity() {
+		String pkg = PackageSingleton.getInstance().getPkg();
+		return new File(Environment.getExternalStorageDirectory(),
+				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.ACTIVITY).exists();
+	}
+
 	public static void deleteActivity() {
+		String pkg = PackageSingleton.getInstance().getPkg();
 		File file = new File(Environment.getExternalStorageDirectory(),
-				Solo.Config.PATH + "/" + Solo.Config.ACTIVITY);
+				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.ACTIVITY);
 		if (file.exists()) {
 			boolean b= file.delete();
 			Log.d(Solo.LOG_TAG, "Delete result: " + b + " " + file.getAbsolutePath());
@@ -152,13 +169,10 @@ public class FileUtils {
 		writer(json, Solo.Config.JSON, false);
 	}
 
-	public static void writeResult(String result){
-		writer(result, Solo.Config.RESULT, true);
-	}
-
 	private static void writer(String string, String fileName, boolean append){
+		String pkg = PackageSingleton.getInstance().getPkg();
 		File exportDir = new File(Environment.getExternalStorageDirectory(),
-				Solo.Config.PATH);
+				String.format(Solo.Config.PATH, pkg));
 		if (!exportDir.exists()) {
 			boolean b = exportDir.mkdirs();
 			Log.d(Solo.LOG_TAG, "Mkdirs result: " + b + " " + exportDir.getAbsolutePath());
@@ -185,7 +199,8 @@ public class FileUtils {
 
 	private static StringBuilder reader(String fileName){
 		StringBuilder sb = new StringBuilder();
-		File exportDir = new File(Environment.getExternalStorageDirectory(), Solo.Config.PATH);
+		String pkg = PackageSingleton.getInstance().getPkg();
+		File exportDir = new File(Environment.getExternalStorageDirectory(), String.format(Solo.Config.PATH, pkg));
 		if (!exportDir.exists()) {
 			Log.w(Solo.LOG_TAG, exportDir.getAbsolutePath() + " Not Found.");
 			return null;

@@ -339,11 +339,13 @@ class ScreenshotTaker {
 		FileOutputStream fos = null;
 		String fileName = getFileName(name);
 		File directory = null;
+		String pkg = PackageSingleton.getInstance().getPkg();
+		String path = String.format(Solo.Config.screenshotSavePath, pkg);
 		if (fileName.contains("/")) {
-			directory = new File(config.screenshotSavePath, fileName.split("/")[0]);
+			directory = new File(path, fileName.split("/")[0]);
 			fileName = fileName.split("/")[1];
 		} else {
-			directory = new File(config.screenshotSavePath);
+			directory = new File(path);
 		}
 
 		directory.mkdirs();
