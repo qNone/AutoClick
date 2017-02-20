@@ -28,11 +28,12 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="com.android.ide.eclipse.adt.DEPENDENCIES" level="application" />
     <orderEntry type="library" name="robotium" level="project" />
-    <orderEntry type="library" name="android-junit-report-1.5.8" level="project" />
     <orderEntry type="library" name="junit-4.12" level="project" />
     <orderEntry type="library" name="gson-2.3" level="project" />
     <orderEntry type="library" name="android-support-v4-23" level="project" />
     <orderEntry type="library" name="support-v4-23.3.0" level="project" />
     <orderEntry type="library" name="recyclerview-v7-23.3.0" level="project" />
+    <orderEntry type="library" name="robotium-solo-5.6.3 (4)" level="project" />
+    <orderEntry type="library" name="robotium-solo-5.6.3" level="project" />
   </component>
 </module>
