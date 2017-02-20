@@ -107,6 +107,11 @@ public class Solo extends com.robotium.solo.Solo{
 
     public static class Config extends com.robotium.solo.Solo.Config {
 
+        /**
+         *  Set to true if logging should be enabled. Default value is false.
+         */
+
+        public boolean commandLogging = true;
 
         /**
          * The screenshot save path. Default save path is /sdcard/AutoClick/package/Screenshots/.
