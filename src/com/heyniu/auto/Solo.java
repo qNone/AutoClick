@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.app.UiAutomation;
-import android.content.Context;
+import android.content.*;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -768,7 +768,7 @@ public class Solo extends com.robotium.solo.Solo{
                 .build());
 
 
-        startMonitor(instrumentation);
+        startMonitor(context);
         authorizationMonitor(instrumentation);
         new Permission(context, config.PACKAGE, instrumentation).requestPermissionsForShell();
     }
@@ -846,15 +846,10 @@ public class Solo extends com.robotium.solo.Solo{
 
     /**
      * Start the Monitor.
-     * @param instrumentation instrumentation
      */
-    private void startMonitor(Instrumentation instrumentation) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return;
-        UiAutomation uiAutomation = instrumentation.getUiAutomation();
-        if (uiAutomation == null) return;
-        String command = "am start -n " + DAEMON + "/" + DAEMON + ".MainActivity";
-        Log.i(LOG_TAG, "adb shell " + command);
-        uiAutomation.executeShellCommand(command);
+    private void startMonitor(Activity activity) {
+        android.content.Intent intent = activity.getPackageManager().getLaunchIntentForPackage(DAEMON);
+        if (intent != null) activity.startActivity(intent);
     }
 
     /**
