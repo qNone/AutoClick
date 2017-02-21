@@ -7,7 +7,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Looper;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -669,7 +668,8 @@ class Handler {
                 if (!act.contains(activity)) {
                     finish(activity);
                     Log.i(Solo.LOG_TAG, "ReStart Activity from getRunningTask: " + activity);
-                    startActivity(context, params, activity);
+                    boolean isAbandon = startActivity(context, params, activity);
+                    if (isAbandon) startTargetApplication();
                     solo.sleep(config.sleepDuration * 4);
                     return true;
                 }
@@ -690,13 +690,19 @@ class Handler {
                 if (!isShown) {
                     finish(activity);
                     Log.i(Solo.LOG_TAG, "ReStart Activity from isShown: " + activity);
-                    startActivity(context, params, activity);
+                    boolean isAbandon = startActivity(context, params, activity);
+                    if (isAbandon) startTargetApplication();
                     solo.sleep(config.sleepDuration * 4);
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    private void startTargetApplication() {
+        android.content.Intent intent = context.getPackageManager().getLaunchIntentForPackage(config.PACKAGE);
+        if (intent != null) context.startActivity(intent);
     }
 
     void iterationNode(AccessibilityNodeInfo nodeInfo, String activity, Map<String, Object> params) {
@@ -825,7 +831,6 @@ class Handler {
 
     /**
      * Reads the json file, generates the parameters required for the iteration, and ignores part of the activity.
-     * @throws Exception
      */
     void handleParams() throws Exception {
         String json = FileUtils.readJson();
@@ -863,9 +868,15 @@ class Handler {
      * @param isWeb if true, the activity is webView.
      */
     void iteration(String activity, Map<String, Object> params, boolean iteration, boolean isWeb) throws Exception {
-        boolean result = startActivity(context, params, activity);
+        boolean isAbandon = false;
+        // If the current activity is not target, start the target.
+        Activity current = solo.getCurrentActivity();
+        if (!current.toString().contains(activity)) {
+            isAbandon = startActivity(context, params, activity);
+        } else currentActivity = current;
+
         // Abandon start the target activity, failure to start the target activity may be due to protocol jumps.
-        if (result) return;
+        if (isAbandon) return;
         solo.sleep(config.sleepDuration * 4);
         Log.i(LOG_TAG, "current activity: " + currentActivity);
         FileUtils.writeActivity(TimeUtils.getDate() + " starting iteration: " + activity);
