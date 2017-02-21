@@ -16,6 +16,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -666,7 +667,6 @@ class Handler {
                 cn = getRunningTask(context);
                 act = cn.getClassName();
                 if (!act.contains(activity)) {
-                    finish(activity);
                     Log.i(Solo.LOG_TAG, "ReStart Activity from getRunningTask: " + activity);
                     boolean isAbandon = startActivity(context, params, activity);
                     if (isAbandon) startTargetApplication();
@@ -688,7 +688,6 @@ class Handler {
                 goBackToActivitySync(names[names.length - 1]);
                 isShown = isShown(context);
                 if (!isShown) {
-                    finish(activity);
                     Log.i(Solo.LOG_TAG, "ReStart Activity from isShown: " + activity);
                     boolean isAbandon = startActivity(context, params, activity);
                     if (isAbandon) startTargetApplication();
@@ -701,6 +700,7 @@ class Handler {
     }
 
     private void startTargetApplication() {
+        Log.i(LOG_TAG, "startTargetApplication()");
         android.content.Intent intent = context.getPackageManager().getLaunchIntentForPackage(config.PACKAGE);
         if (intent != null) context.startActivity(intent);
     }
@@ -826,7 +826,16 @@ class Handler {
                 });
             }
         }
-        solo.clearClicked();
+    }
+
+    private Activity getActivity(String activity) {
+        ArrayList<Activity> activitiesOpened = activityUtils.getAllOpenedActivities();
+        for (Activity activity2 : activitiesOpened) {
+            if (activity.contains(activity2.getClass().getSimpleName())) {
+                return activity2;
+            }
+        }
+        return null;
     }
 
     /**
@@ -895,7 +904,9 @@ class Handler {
             }
         }
         finish(activity);
+        solo.clearClicked();
         clickeds.clear();
+        BundleSingleton.getInstance().clear();
         FileUtils.writeActivity(TimeUtils.getDate() + " stopped iteration: " + activity);
         if (!config.keepActivitiesScreenShots) FileUtils.deleteScreenShots(activity);
     }
@@ -953,23 +964,29 @@ class Handler {
      * Returns if retry >= 3, abandon start the target activity.
      */
     boolean startActivity(Context context, Map<String, Object> params, String activity) throws ClassNotFoundException {
-        finish(activity);
         Class<?> target;
         target = Class.forName(activity);
-        context.startActivity(IntentParser.getIntent(context, target, params));
+        startActivityForBundle(context, target, params);
         solo.sleep(config.sleepDuration);
         solo.hideSoftKeyboard();
         Log.i(LOG_TAG, "start activity: " + activity);
         // In some cases, the target activity will be overwritten and will need to be retried.
         int retry = 0;
         while (retry < 3){
-            String[] strings = activity.split("\\.");
-            boolean result = solo.waitForActivity(strings[strings.length - 1], 2000);
-            if (!result){
-                finish(activity);
-                context.startActivity(IntentParser.getIntent(context, target, params));
+            boolean isShown = isShown(getActivity(activity));
+            if (!isShown){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    try {
+                        uiAutomation.executeShellCommand("input keyevent " + KeyEvent.KEYCODE_BACK);
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
+                    solo.sleep(config.sleepDuration);
+                }
                 solo.sleep(config.sleepDuration);
+                startActivityForBundle(context, target, params);
                 solo.hideSoftKeyboard();
+                solo.sleep(config.sleepDuration);
                 Log.i(LOG_TAG, "restart activity: " + activity);
                 retry++;
             }else break;
@@ -983,6 +1000,18 @@ class Handler {
         // Abandon start the target activity, failure to start the target activity may be due to protocol jumps.
         if (retry >= 3) Log.e(LOG_TAG, "Abandon start " + activity + " , failure to start the target activity may be due to protocol jumps.");
         return retry >= 3;
+    }
+
+    private void startActivityForBundle(Context context, Class<?> target, Map<String, Object> params) {
+        finish(target.getName());
+        // finish is asynchronous.
+        solo.sleep(500);
+        BundleSingleton instance = BundleSingleton.getInstance();
+        if (instance.containsKey(target.getName())) {
+            Log.i(LOG_TAG, "start Activity for Bundle: " + target);
+            context.startActivity(IntentParser.getIntent(context, target, params),
+                    instance.getBundle(target.getName()));
+        } else context.startActivity(IntentParser.getIntent(context, target, params));
     }
 
     /**

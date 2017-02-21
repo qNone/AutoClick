@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.Instrumentation;
 import android.app.UiAutomation;
-import android.content.*;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -92,7 +92,8 @@ public class Solo extends com.robotium.solo.Solo{
 
             @Override
             public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-
+                Log.d(LOG_TAG, "onActivitySaveInstanceState: " + activity.getClass().getName());
+                BundleSingleton.getInstance().put(activity.getClass().getName(), outState);
             }
 
             @Override
@@ -106,12 +107,6 @@ public class Solo extends com.robotium.solo.Solo{
     }
 
     public static class Config extends com.robotium.solo.Solo.Config {
-
-        /**
-         *  Set to true if logging should be enabled. Default value is false.
-         */
-
-        public boolean commandLogging = true;
 
         /**
          * The screenshot save path. Default save path is /sdcard/AutoClick/package/Screenshots/.
@@ -454,20 +449,6 @@ public class Solo extends com.robotium.solo.Solo{
         sleep(config.sleepDuration);
         drag(width / 2, width, height / 2, height / 2, 1);
         sleep(config.sleepDuration);
-    }
-
-    /**
-     * Returns to an Activity matching the specified name.
-     *
-     * @param name the name of the {@link Activity} to return to. Example is: {@code "MyActivity"}
-     */
-
-    public void goBackToActivity(String name) {
-        if(config.commandLogging){
-            Log.d(config.commandLoggingTag, "goBackToActivity(\""+name+"\")");
-        }
-
-        activityUtils.goBackToActivity(name);
     }
 
     /**
@@ -849,7 +830,10 @@ public class Solo extends com.robotium.solo.Solo{
      */
     private void startMonitor(Activity activity) {
         android.content.Intent intent = activity.getPackageManager().getLaunchIntentForPackage(DAEMON);
-        if (intent != null) activity.startActivity(intent);
+        if (intent != null) {
+            activity.startActivity(intent);
+            Log.i(LOG_TAG, "Start the Monitor: " + DAEMON);
+        }
     }
 
     /**

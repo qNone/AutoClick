@@ -131,7 +131,7 @@ class Permission {
      * adb shell pm grant package android.permission.*
      */
     void requestPermissionsForShell() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             String[] permissions = checkPermissions();
             if (permissions == null) return;
             UiAutomation uiAutomation = instrumentation.getUiAutomation();

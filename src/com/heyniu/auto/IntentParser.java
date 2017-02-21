@@ -170,6 +170,7 @@ class IntentParser {
      */
     static Intent getIntent(Context context, Class<?> target, Map<String, Object> params) {
         Intent intent = new Intent(context, target);
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
         parseExtras(params, intent);
         return intent;
     }
