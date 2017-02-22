@@ -2,6 +2,7 @@ package com.heyniu.auto;
 
 import android.app.Activity;
 import android.app.Instrumentation;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 
@@ -25,6 +27,7 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
 
     private HandlerThread screenShotSaverThread = null;
     private ScreenShotSaver screenShotSaver = null;
+    private String pkg;
 
     /**
      * Constructs this object.
@@ -37,6 +40,10 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
      */
     ScreenshotTaker(Solo.Config config, Instrumentation instrumentation, ActivityUtils activityUtils, ViewFetcher viewFetcher, Sleeper sleeper) {
         super(config, instrumentation, activityUtils, viewFetcher, sleeper);
+
+        Context mContext = instrumentation.getTargetContext().getApplicationContext();
+        SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
+        pkg = helper.getString(SharedPreferencesHelper.PACKAGE);
     }
 
     void takeScreenshotForUiAutomation(String rectInfo, String activity){
@@ -92,7 +99,6 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
         FileOutputStream fos;
         String fileName = getFileName(name);
         File directory;
-        String pkg = PackageSingleton.getInstance().getPkg();
         String path = String.format(Solo.Config.screenshotSavePath, pkg);
         if (fileName.contains("/")) {
             directory = new File(path, fileName.split("/")[0]);

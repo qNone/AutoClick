@@ -31,6 +31,8 @@ class CrashHandler implements UncaughtExceptionHandler {
 	private Solo.Config config;
 	private Map<String, String> infos = new HashMap<>();
 	private DateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
+	private String cls;
+	private String pkg;
 
 	private CrashHandler() {
 	}
@@ -51,6 +53,9 @@ class CrashHandler implements UncaughtExceptionHandler {
 		this.config = config;
 		this.mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
 		Thread.setDefaultUncaughtExceptionHandler(this);
+		SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
+		cls = helper.getString(SharedPreferencesHelper.CLASS);
+		pkg = helper.getString(SharedPreferencesHelper.PACKAGE);
 	}
 
 	@Override
@@ -65,10 +70,8 @@ class CrashHandler implements UncaughtExceptionHandler {
 
 	private void rebootApplication() {
 		android.content.Intent intent = new android.content.Intent();
-		SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
-		String cls = helper.getString(SharedPreferencesHelper.CLASS);
 		intent.setAction("Auto.Monitor");
-		intent.putExtra("package", config.PACKAGE);
+		intent.putExtra("package", pkg);
 		intent.putExtra("class", cls);
 		intent.putExtra("runner", config.runner);
 		mContext.sendBroadcast(intent);
@@ -137,9 +140,8 @@ class CrashHandler implements UncaughtExceptionHandler {
 			String time = formatter.format(new Date());
 			String fileName = "crash - " + time  + ".log";
 			if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-				String pkg = PackageSingleton.getInstance().getPkg();
 				File dir = new File(Environment.getExternalStorageDirectory(),
-						String.format(Solo.Config.PATH, pkg) + "/Log");
+						String.format(Solo.Config.PATH, pkg) + "/Crash");
 				if (!dir.exists()) {
 					dir.mkdirs();
 				}

@@ -2,7 +2,7 @@ package application.iteration;
 
 import android.test.ActivityInstrumentationTestCase2;
 
-import com.robotium.solo.Solo;
+import com.heyniu.auto.Solo;
 
 import org.junit.After;
 import org.junit.Before;
@@ -48,8 +48,6 @@ public class Iteration extends ActivityInstrumentationTestCase2 {
         config.loginAccount = "登录帐号";
         config.loginPassword = "登录密码";
         config.loginId = "登录按钮ID";
-        // 被测应用包名
-        config.PACKAGE = PACKAGE;
         config.ignoreActivities = new String[]{"忽略的Activity，此数组中的Activity将不会被遍历"};
         config.ignoreViews = new String[]{"忽略的View，此数组中的View将不会被点击，需填入完整的资源ID"};
 

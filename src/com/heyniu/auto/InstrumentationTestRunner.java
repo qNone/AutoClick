@@ -11,6 +11,11 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
     @Override
     public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
+
+        LogcatMonitor monitor = new LogcatMonitor(getContext());
+        monitor.clear();
+        monitor.start();
+
         saveBundle(arguments);
     }
 
@@ -46,6 +51,11 @@ public class InstrumentationTestRunner extends android.test.InstrumentationTestR
         String runner = info.instrumentation[0].name;
         android.util.Log.e(Solo.LOG_TAG, "Runner: " + runner);
         helper.putString(SharedPreferencesHelper.RUNNER, runner);
+
+        String pkg = info.instrumentation[0].targetPackage;
+        PackageSingleton.getInstance().setPkg(pkg);
+        android.util.Log.e(Solo.LOG_TAG, "Package: " + pkg);
+        helper.putString(SharedPreferencesHelper.PACKAGE, pkg);
 
         android.util.Log.e(Solo.LOG_TAG, "---------------------------");
     }

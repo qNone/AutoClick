@@ -8,6 +8,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -38,10 +39,13 @@ class AcrossApplication {
 
     AcrossApplication(Context context, Instrumentation instrumentation, Solo.Config config){
         this.context = context;
-        this.pkg = config.PACKAGE;
         this.instrumentation = instrumentation;
         this.config = config;
         uiAutomation = instrumentation.getUiAutomation();
+
+        Context mContext = instrumentation.getTargetContext().getApplicationContext();
+        SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
+        this.pkg= helper.getString(SharedPreferencesHelper.PACKAGE);
     }
 
     /**
@@ -194,7 +198,7 @@ class AcrossApplication {
             @Override
             public void onAccessibilityEvent(AccessibilityEvent event) {
                 if (event.getEventType() == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
-                    if (config.PACKAGE.contains(event.getPackageName())) {
+                    if (pkg.contains(event.getPackageName())) {
                         if (event.getParcelableData() != null && event.getParcelableData() instanceof Notification) {
                             Notification notification = (Notification) event.getParcelableData();
                             PendingIntent pendingIntent = notification.contentIntent;

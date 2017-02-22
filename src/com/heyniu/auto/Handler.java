@@ -16,6 +16,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,6 +53,7 @@ class Handler {
 
     private ClickedSingleton mClickedSingleton = ClickedSingleton.getInstance();
     private Activity currentActivity;
+    private String pkg;
 
      Handler(Solo solo){
         this.solo = solo;
@@ -60,6 +62,9 @@ class Handler {
          this.context = solo.getContext();
         this.screenshotTaker = solo.getScreenshotTaker();
          this.activityUtils = solo.getActivityUtils();
+
+         SharedPreferencesHelper helper = new SharedPreferencesHelper(context, SharedPreferencesHelper.ARGUMENTS);
+         pkg = helper.getString(SharedPreferencesHelper.PACKAGE);
     }
 
     /**
@@ -642,7 +647,7 @@ class Handler {
      * if not returned after the target activity is to restart the target activity
      */
     private boolean handleJump(Activity context, String activity, Map<String, Object> params) throws Exception{
-        handleAcrossApplicationJump();
+//        handleAcrossApplicationJump();
 
         ComponentName cn = getRunningTask(context);
         String pkg = cn.getPackageName();
@@ -654,28 +659,28 @@ class Handler {
             solo.sleep(config.sleepDuration * 4);
             return false;
         }
-//        if (!act.contains(activity)) {
-//            Log.i(Solo.LOG_TAG, "package act: " + act);
-//            Log.i(Solo.LOG_TAG, "package target: " + config.PACKAGE);
-//            solo.goBack();
-//            solo.sleep(config.sleepDuration);
-//            cn = getRunningTask(context);
-//            act = cn.getClassName();
-//            if (!act.contains(activity)) {
-//                String[] names = activity.split("\\.");
-//                goBackToActivitySync(names[names.length - 1]);
-//                cn = getRunningTask(context);
-//                act = cn.getClassName();
-//                if (!act.contains(activity)) {
-//                    Log.i(Solo.LOG_TAG, "ReStart Activity from getRunningTask: " + activity);
-//                    boolean isAbandon = startActivity(context, params, activity);
-//                    if (isAbandon) startTargetApplication();
-//                    solo.sleep(config.sleepDuration * 4);
-//                    return true;
-//                }
-//            }
-//            return false;
-//        }
+        if (!act.contains(activity)) {
+            Log.i(Solo.LOG_TAG, "package act: " + act);
+            Log.i(Solo.LOG_TAG, "package target: " + this.pkg);
+            solo.goBack();
+            solo.sleep(config.sleepDuration);
+            cn = getRunningTask(context);
+            act = cn.getClassName();
+            if (!act.contains(activity)) {
+                String[] names = activity.split("\\.");
+                goBackToActivitySync(names[names.length - 1]);
+                cn = getRunningTask(context);
+                act = cn.getClassName();
+                if (!act.contains(activity)) {
+                    Log.i(Solo.LOG_TAG, "ReStart Activity from getRunningTask: " + activity);
+                    boolean isAbandon = startActivity(context, params, activity);
+                    if (isAbandon) startTargetApplication();
+                    solo.sleep(config.sleepDuration * 4);
+                    return true;
+                }
+            }
+            return false;
+        }
         boolean isShown = isShown(context);
         Log.i(Solo.LOG_TAG, "current Activity " + context + " isShown: " + isShown);
         if (!isShown) {
@@ -700,16 +705,10 @@ class Handler {
     }
 
     private void handleAcrossApplicationJump() {
-        boolean adbConnect = true;
-        AccessibilityNodeInfo node = null;
-        try {
-            node = uiAutomation.getRootInActiveWindow();
-        } catch (Exception ignored) {
-            adbConnect = false;
-        }
-        if (adbConnect && node != null) {
+        if (uiAutomation != null) {
+            AccessibilityNodeInfo node = uiAutomation.getRootInActiveWindow();
             String pkg = node.getPackageName().toString();
-            if (!pkg.contains(config.PACKAGE)) {
+            if (!pkg.contains(this.pkg)) {
                 solo.acrossForShellCommand("input keyevent " + KeyEvent.KEYCODE_BACK);
                 solo.sleep(config.sleepDuration * 2);
             }
@@ -718,7 +717,7 @@ class Handler {
 
     private void startTargetApplication() {
         Log.i(LOG_TAG, "startTargetApplication()");
-        android.content.Intent intent = context.getPackageManager().getLaunchIntentForPackage(config.PACKAGE);
+        android.content.Intent intent = context.getPackageManager().getLaunchIntentForPackage(this.pkg);
         if (intent != null) context.startActivity(intent);
     }
 

@@ -13,6 +13,7 @@ class PackageSingleton {
     private String pkg;
 
     String getPkg() {
+        if (pkg == null) throw new RuntimeException("Package is null");
         return pkg;
     }
 

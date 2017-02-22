@@ -1,6 +1,7 @@
 package com.heyniu.auto;
 
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -74,10 +75,6 @@ class FileUtils {
 		return object;
 	}
 
-	static void writeLog(String text){
-		writer(text, Solo.Config.LOG, true);
-	}
-
 	static String readJson(){
 		StringBuilder sb = reader(Solo.Config.JSON);
 		return sb == null ? "" : sb.toString();
@@ -99,16 +96,6 @@ class FileUtils {
 		File file = new File(Environment.getExternalStorageDirectory(),
 				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.JSON);
 		return file.exists();
-	}
-
-	static void deleteLog() {
-		String pkg = PackageSingleton.getInstance().getPkg();
-		File file = new File(Environment.getExternalStorageDirectory(),
-				String.format(Solo.Config.PATH, pkg) + "/" + Solo.Config.LOG);
-		if (file.exists()) {
-			boolean b = file.delete();
-			Log.d(Solo.LOG_TAG, "Delete result: " + b + " " + file.getAbsolutePath());
-		}
 	}
 
 	/**
@@ -235,12 +222,7 @@ class FileUtils {
 		return sb;
 	}
 
-	public static void writeLogcat(String command) {
-		StringBuilder stringBuilder = getRuntime(command);
-		writer(stringBuilder.toString(), "321.txt", true);
-	}
-
-	public static StringBuilder getRuntime(String command){
+	static StringBuilder getRuntime(String[] command){
 		StringBuilder sb = new StringBuilder();
 		Process p = null;
 		try {

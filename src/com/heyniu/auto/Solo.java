@@ -8,13 +8,13 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
 import android.os.StrictMode;
 import android.os.SystemClock;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -52,7 +52,7 @@ public class Solo extends com.robotium.solo.Solo{
 
     public Solo(Instrumentation instrumentation, Config config, Activity activity) {
         super(instrumentation, config, activity);
-        init(config, instrumentation, activity);
+
         this.config = config;
         this.application = (Application) instrumentation.getTargetContext().getApplicationContext();
         this.acrossApplication = new AcrossApplication(activity, instrumentation, config);
@@ -102,7 +102,8 @@ public class Solo extends com.robotium.solo.Solo{
             }
         };
 
-        application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
+        init(config, instrumentation, activity);
+
         this.handler = new Handler(this);
     }
 
@@ -132,11 +133,6 @@ public class Solo extends com.robotium.solo.Solo{
          * Starts the activity parameter json file.
          */
         public static final String JSON = "Params.json";
-
-        /**
-         * The log is save in this file.
-         */
-        public static final String LOG = "Log.log";
 
         /**
          * If true, every time you start a activity will be screenshot.
@@ -185,11 +181,6 @@ public class Solo extends com.robotium.solo.Solo{
          * Login activity log in button.
          */
         public String loginId;
-
-        /**
-         * Target application, the test program will auto iteration it.
-         */
-        public String PACKAGE;
 
         /**
          * The activity within the array will not be iterated.
@@ -686,15 +677,19 @@ public class Solo extends com.robotium.solo.Solo{
     }
 
     private void init(Config config, Instrumentation instrumentation, Activity context) {
-        PackageSingleton.getInstance().setPkg(config.PACKAGE);
+        Context mContext = instrumentation.getTargetContext().getApplicationContext();
+        SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
+        String pkg = helper.getString(SharedPreferencesHelper.PACKAGE);
+
+
 
         checkConfig(config);
         checkReptile(config);
         checkNative(config);
         checkRunner(config);
 
-        Log.v(LOG_TAG, "setUp()", context);
-        Log.v(LOG_TAG, "Iteration mode is " + config.mode.toString().toLowerCase(), context);
+        Log.i(LOG_TAG, "setUp()");
+        Log.i(LOG_TAG, "Iteration mode is " + config.mode.toString().toLowerCase());
         // If mode is reptile to clean up the data.
         if (config.mode == Config.Mode.REPTILE && config.newReptile) {
             clearData();
@@ -702,13 +697,14 @@ public class Solo extends com.robotium.solo.Solo{
         int[] wh = DesignUtils.getDisplayWH(context);
         width = wh[0];
         height = wh[1];
-        Log.v(LOG_TAG, "The device width: " + width, context);
-        Log.v(LOG_TAG, "The device height: " + height, context);
+        Log.i(LOG_TAG, "The device width: " + width);
+        Log.i(LOG_TAG, "The device height: " + height);
 
         config.sleepDuration = changeSleepStandard(config);
 
         CrashHandler.getInstance().init(instrumentation.getTargetContext().getApplicationContext(),
                 config);
+
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy
                 .Builder()
                 .detectAll()
@@ -720,10 +716,11 @@ public class Solo extends com.robotium.solo.Solo{
                 .penaltyLog()
                 .build());
 
-
         startMonitor(context);
         authorizationMonitor(instrumentation);
-        new Permission(context, config.PACKAGE, instrumentation).requestPermissionsForShell();
+        application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
+
+        new Permission(context, pkg, instrumentation).requestPermissionsForShell();
     }
 
     private void checkRunner(Config config) {
@@ -755,11 +752,10 @@ public class Solo extends com.robotium.solo.Solo{
      * Initialize the data.
      */
     private void clearData() {
-        Log.v(LOG_TAG, "Clear data.", context);
+        Log.i(LOG_TAG, "Clear data.");
         FileUtils.deleteJson();
         FileUtils.deleteActivity();
         FileUtils.deleteParams();
-        FileUtils.deleteLog();
     }
 
     private void authorizationMonitor(Instrumentation instrumentation) {
@@ -791,9 +787,6 @@ public class Solo extends com.robotium.solo.Solo{
         }
         if (config.loginId == null || config.loginId.isEmpty()) {
             throw new RuntimeException("The loginId is not configured, please check!");
-        }
-        if (config.PACKAGE == null || config.PACKAGE.isEmpty() || !config.PACKAGE.contains(".")) {
-            throw new RuntimeException("The target package is not configured, please check!");
         }
     }
 

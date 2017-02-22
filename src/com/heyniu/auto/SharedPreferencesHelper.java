@@ -11,6 +11,7 @@ class SharedPreferencesHelper {
     static final String NEW_REPTILE = "newReptile";
     static final String CLASS = "class";
     static final String RUNNER = "runner";
+    static final String PACKAGE = "package";
 
 
     SharedPreferencesHelper(Context context, String name) {

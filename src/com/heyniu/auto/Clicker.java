@@ -3,6 +3,7 @@ package com.heyniu.auto;
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;

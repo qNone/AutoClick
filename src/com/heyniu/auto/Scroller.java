@@ -2,6 +2,7 @@ package com.heyniu.auto;
 
 import android.app.Instrumentation;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import com.robotium.solo.Sleeper;
 import com.robotium.solo.ViewFetcher;
