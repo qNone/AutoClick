@@ -19,7 +19,6 @@ import com.robotium.solo.Waiter;
 import com.robotium.solo.WebUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 class Clicker extends com.robotium.solo.Clicker{
 
@@ -27,7 +26,7 @@ class Clicker extends com.robotium.solo.Clicker{
     private final Solo.Config config;
     private final ScreenshotTaker screenshotTaker;
 
-    private HashMap<Integer, int[]> clickeds = new HashMap<>();
+    private ClickedSingleton mClickedSingleton = ClickedSingleton.getInstance();
 
     /**
      * Constructs this object.
@@ -72,24 +71,17 @@ class Clicker extends com.robotium.solo.Clicker{
         // If activity is a login activity, has been clicked to continue to click.
         if (!view.getContext().toString().contains(config.loginActivity)) {
             // Remove view that have been clicked.
-            for (HashMap.Entry<Integer, int[]> entry : clickeds.entrySet()) {
-                if (view.getId() == entry.getKey() && xy1[0] == entry.getValue()[0]
-                        && xy1[1] == entry.getValue()[1]) {
-                    Log.w(Solo.LOG_TAG, view + " is clicked, ignore it.");
-                    return;
-                }
+            if (mClickedSingleton.containsKeyForNative(view.getId())) {
+                Log.w(Solo.LOG_TAG, view + " is clicked, ignore it.");
+                return;
             }
         }
         takeScreenshot(view);
         int xy[] = new int[2];
         view.getLocationOnScreen(xy);
-        if (view.getId() != -1)clickeds.put(view.getId(), xy);
+        if (view.getId() != -1) mClickedSingleton.putForNative(view.getId(), xy);
         // If true, double click on View.
         click(x, y);
-    }
-
-    void clear() {
-        clickeds.clear();
     }
 
     /**

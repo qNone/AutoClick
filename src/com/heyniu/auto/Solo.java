@@ -402,10 +402,6 @@ public class Solo extends com.robotium.solo.Solo{
         screenshotTaker.takeScreenshot(name + "/" +  TimeUtils.getDate(), 20, watermark_x, watermark_y);
     }
 
-    void clearClicked(){
-        clicker.clear();
-    }
-
     /**
      * Scrolls a ScrollView.
      *
@@ -603,33 +599,9 @@ public class Solo extends com.robotium.solo.Solo{
         }
         isSuccess = waitForActivity(homeActivity, 5000);
         // 可能存在类似新手引导的界面覆盖了主页，finish
-        if (!isSuccess) finish(getCurrentActivity().getComponentName().getClassName());
+        if (!isSuccess) handler.finish(getCurrentActivity().getComponentName().getClassName());
         handler.startActivity(context, null, config.loginActivity);
         handler.handleLogin();
-    }
-
-    /**
-     * Finish the activity.
-     */
-    public void finish(String activity) {
-        if (config.homeActivity.contains(activity))return;
-        ArrayList<Activity> activitiesOpened = activityUtils.getAllOpenedActivities();
-        for (Activity activity2 : activitiesOpened) {
-            if (activity.contains(activity2.getClass().getSimpleName())) {
-                if(config.commandLogging){
-                    Log.d(config.commandLoggingTag, "finish("+activity2.getClass().getSimpleName()+")");
-                }
-                //Main thread finish activity.
-                android.os.Handler handler = new android.os.Handler(Looper.getMainLooper());
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        activity2.finish();
-                    }
-                });
-            }
-        }
-        clearClicked();
     }
 
     /**
@@ -794,7 +766,7 @@ public class Solo extends com.robotium.solo.Solo{
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
         UiAutomation uiAutomation = instrumentation.getUiAutomation();
         if (uiAutomation == null) return;
-        uiAutomation.executeShellCommand("pm grant " + DAEMON + " " + Permission.WRITE_EXTERNAL_STORAGE);
+        acrossForShellCommand("pm grant " + DAEMON + " " + Permission.WRITE_EXTERNAL_STORAGE);
     }
 
     /**
@@ -909,5 +881,13 @@ public class Solo extends com.robotium.solo.Solo{
      */
     public void acrossForQQLogin(String account, String password){
         acrossApplication.acrossForQQLogin(account, password);
+    }
+
+    /**
+     * Work across application boundaries for execute shell command.
+     * @param command command
+     */
+    public void acrossForShellCommand(String command) {
+        acrossApplication.acrossForShellCommand(command);
     }
 }

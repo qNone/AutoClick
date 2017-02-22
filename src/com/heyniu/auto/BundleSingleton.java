@@ -6,32 +6,18 @@ import java.util.HashMap;
 
 class BundleSingleton {
 
-    private static BundleSingleton instance;
-
-    private HashMap<String, Bundle> arguments = new HashMap<>();
-
-    private BundleSingleton() {}
+    private static BundleSingleton instance = new BundleSingleton();
 
     static BundleSingleton getInstance() {
-        if (instance == null) {
-            synchronized (BundleSingleton.class) {
-                if (instance == null) {
-                    instance = new BundleSingleton();
-                }
-            }
-        }
         return instance;
     }
 
+    private BundleSingleton() {
+    }
+
+    private HashMap<String, Bundle> arguments = new HashMap<>();
+
     void put(String key, Bundle value) {
-        if (arguments == null) {
-            synchronized (BundleSingleton.class) {
-                if (arguments == null) {
-                    arguments = new HashMap<>();
-                }
-            }
-        }
-        Log.e(Solo.LOG_TAG, "arguments size:" + arguments.size());
         arguments.put(key, value);
     }
 

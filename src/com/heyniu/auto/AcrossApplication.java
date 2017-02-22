@@ -177,6 +177,14 @@ class AcrossApplication {
     }
 
     /**
+     * Work across application boundaries for execute shell command.
+     * @param command command
+     */
+    void acrossForShellCommand(String command) {
+        shellCommand(command);
+    }
+
+    /**
      * Work across application boundaries for notification.
      * Listen to the notification bar 10 seconds at a time.
      */

@@ -1,22 +1,16 @@
 package com.heyniu.auto;
 
 class PackageSingleton {
-
-    private static PackageSingleton instance;
-    private String pkg;
-
-    private PackageSingleton() {}
+    private static PackageSingleton instance = new PackageSingleton();
 
     static PackageSingleton getInstance() {
-        if (instance == null) {
-            synchronized (PackageSingleton.class) {
-                if (instance == null) {
-                    instance = new PackageSingleton();
-                }
-            }
-        }
         return instance;
     }
+
+    private PackageSingleton() {
+    }
+
+    private String pkg;
 
     String getPkg() {
         return pkg;

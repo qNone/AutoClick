@@ -50,9 +50,8 @@ class Handler {
     private final ScreenshotTaker screenshotTaker;
     private final ActivityUtils activityUtils;
 
+    private ClickedSingleton mClickedSingleton = ClickedSingleton.getInstance();
     private Activity currentActivity;
-
-    private ArrayList<String> clickeds = new ArrayList<>();
 
      Handler(Solo solo){
         this.solo = solo;
@@ -643,7 +642,8 @@ class Handler {
      * if not returned after the target activity is to restart the target activity
      */
     private boolean handleJump(Activity context, String activity, Map<String, Object> params) throws Exception{
-//		if (config.useNative)
+        handleAcrossApplicationJump();
+
         ComponentName cn = getRunningTask(context);
         String pkg = cn.getPackageName();
         String act = cn.getClassName();
@@ -654,28 +654,28 @@ class Handler {
             solo.sleep(config.sleepDuration * 4);
             return false;
         }
-        if (!act.contains(activity)) {
-            Log.i(Solo.LOG_TAG, "package act: " + act);
-            Log.i(Solo.LOG_TAG, "package target: " + config.PACKAGE);
-            solo.goBack();
-            solo.sleep(config.sleepDuration);
-            cn = getRunningTask(context);
-            act = cn.getClassName();
-            if (!act.contains(activity)) {
-                String[] names = activity.split("\\.");
-                goBackToActivitySync(names[names.length - 1]);
-                cn = getRunningTask(context);
-                act = cn.getClassName();
-                if (!act.contains(activity)) {
-                    Log.i(Solo.LOG_TAG, "ReStart Activity from getRunningTask: " + activity);
-                    boolean isAbandon = startActivity(context, params, activity);
-                    if (isAbandon) startTargetApplication();
-                    solo.sleep(config.sleepDuration * 4);
-                    return true;
-                }
-            }
-            return false;
-        }
+//        if (!act.contains(activity)) {
+//            Log.i(Solo.LOG_TAG, "package act: " + act);
+//            Log.i(Solo.LOG_TAG, "package target: " + config.PACKAGE);
+//            solo.goBack();
+//            solo.sleep(config.sleepDuration);
+//            cn = getRunningTask(context);
+//            act = cn.getClassName();
+//            if (!act.contains(activity)) {
+//                String[] names = activity.split("\\.");
+//                goBackToActivitySync(names[names.length - 1]);
+//                cn = getRunningTask(context);
+//                act = cn.getClassName();
+//                if (!act.contains(activity)) {
+//                    Log.i(Solo.LOG_TAG, "ReStart Activity from getRunningTask: " + activity);
+//                    boolean isAbandon = startActivity(context, params, activity);
+//                    if (isAbandon) startTargetApplication();
+//                    solo.sleep(config.sleepDuration * 4);
+//                    return true;
+//                }
+//            }
+//            return false;
+//        }
         boolean isShown = isShown(context);
         Log.i(Solo.LOG_TAG, "current Activity " + context + " isShown: " + isShown);
         if (!isShown) {
@@ -697,6 +697,23 @@ class Handler {
             }
         }
         return false;
+    }
+
+    private void handleAcrossApplicationJump() {
+        boolean adbConnect = true;
+        AccessibilityNodeInfo node = null;
+        try {
+            node = uiAutomation.getRootInActiveWindow();
+        } catch (Exception ignored) {
+            adbConnect = false;
+        }
+        if (adbConnect && node != null) {
+            String pkg = node.getPackageName().toString();
+            if (!pkg.contains(config.PACKAGE)) {
+                solo.acrossForShellCommand("input keyevent " + KeyEvent.KEYCODE_BACK);
+                solo.sleep(config.sleepDuration * 2);
+            }
+        }
     }
 
     private void startTargetApplication() {
@@ -723,7 +740,7 @@ class Handler {
     private void performClick(AccessibilityNodeInfo node, String activity, Map<String, Object> params) {
         if (node != null && node.isClickable()) {
             String string = getBoundsInScreen(node);
-            boolean clicked = clickeds.contains(string);
+            boolean clicked = mClickedSingleton.containsForNode(string);
             boolean status = viewInIgnoreViews(node.getViewIdResourceName());
             if (!clicked && !status) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.canOpenPopup()) iterationNode(null, activity, params);
@@ -737,7 +754,7 @@ class Handler {
                 }
                 Log.w(LOG_TAG, node.toString());
                 node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                clickeds.add(string);
+                mClickedSingleton.addForNode(string);
                 solo.sleep(config.sleepDuration);
                 try {
                     handleJump(currentActivity, activity, params);
@@ -808,7 +825,7 @@ class Handler {
      * Finish the activity.
      * @param activity activity
      */
-    private void finish(String activity) {
+    void finish(String activity) {
         if (config.homeActivity.contains(activity))return;
         ArrayList<Activity> activitiesOpened = activityUtils.getAllOpenedActivities();
         for (Activity activity2 : activitiesOpened) {
@@ -904,8 +921,8 @@ class Handler {
             }
         }
         finish(activity);
-        solo.clearClicked();
-        clickeds.clear();
+        mClickedSingleton.clearForNative();
+        mClickedSingleton.clearForNode();
         BundleSingleton.getInstance().clear();
         FileUtils.writeActivity(TimeUtils.getDate() + " stopped iteration: " + activity);
         if (!config.keepActivitiesScreenShots) FileUtils.deleteScreenShots(activity);
@@ -977,7 +994,7 @@ class Handler {
             if (!isShown){
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     try {
-                        uiAutomation.executeShellCommand("input keyevent " + KeyEvent.KEYCODE_BACK);
+                        solo.acrossForShellCommand("input keyevent " + KeyEvent.KEYCODE_BACK);
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     }
