@@ -647,8 +647,6 @@ class Handler {
      * if not returned after the target activity is to restart the target activity
      */
     private boolean handleJump(Activity context, String activity, Map<String, Object> params) throws Exception{
-//        handleAcrossApplicationJump();
-
         ComponentName cn = getRunningTask(context);
         String pkg = cn.getPackageName();
         String act = cn.getClassName();
@@ -702,17 +700,6 @@ class Handler {
             }
         }
         return false;
-    }
-
-    private void handleAcrossApplicationJump() {
-        if (uiAutomation != null) {
-            AccessibilityNodeInfo node = uiAutomation.getRootInActiveWindow();
-            String pkg = node.getPackageName().toString();
-            if (!pkg.contains(this.pkg)) {
-                solo.acrossForShellCommand("input keyevent " + KeyEvent.KEYCODE_BACK);
-                solo.sleep(config.sleepDuration * 2);
-            }
-        }
     }
 
     private void startTargetApplication() {
@@ -907,7 +894,10 @@ class Handler {
         FileUtils.writeActivity(TimeUtils.getDate() + " starting iteration: " + activity);
         if (config.activityScreenShots) {
             String[] s = activity.split("\\.");
-            solo.takeScreenshotForAuto("Activities/" + s[s.length - 1]);
+            if (uiAutomation != null) {
+                screenshotTaker.takeScreenshotForUiAutomation("Activities/" + s[s.length - 1]);
+            } else
+                solo.takeScreenshotForAuto("Activities/" + s[s.length - 1]);
         }
         if (iteration) {
             if (isWeb) handleWeb(activity, params);
