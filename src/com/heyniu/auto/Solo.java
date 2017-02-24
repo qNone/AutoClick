@@ -235,7 +235,7 @@ public class Solo extends com.robotium.solo.Solo{
      * @return the UiAutomation used by Robotium
      */
 
-    UiAutomation getUiAutomation(){
+    public UiAutomation getUiAutomation(){
         if(config.commandLogging){
             Log.d(config.commandLoggingTag, "getUiAutomation()");
         }
@@ -277,7 +277,7 @@ public class Solo extends com.robotium.solo.Solo{
      * @return the Context used by Robotium
      */
 
-    Context getContext(){
+    public Context getContext(){
         if(config.commandLogging){
             Log.d(config.commandLoggingTag, "getContext()");
         }
@@ -681,8 +681,6 @@ public class Solo extends com.robotium.solo.Solo{
         SharedPreferencesHelper helper = new SharedPreferencesHelper(mContext, SharedPreferencesHelper.ARGUMENTS);
         String pkg = helper.getString(SharedPreferencesHelper.PACKAGE);
 
-
-
         checkConfig(config);
         checkReptile(config);
         checkNative(config);
@@ -806,7 +804,7 @@ public class Solo extends com.robotium.solo.Solo{
      * @param activity activity
      */
     private void activityListener(Activity activity) {
-        if (config.mode == Solo.Config.Mode.RECORD || config.mode == Solo.Config.Mode.REPTILE) {
+        if (config.mode == Config.Mode.RECORD || config.mode == Config.Mode.REPTILE) {
             IntentParser.recordExtras(context, activity);
         }
     }
