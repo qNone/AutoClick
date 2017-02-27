@@ -105,12 +105,17 @@ class Handler {
                     fragmentTabHost.post(new Runnable() {
                         @Override
                         public void run() {
+                            boolean isDialog = solo.waitForDialogToOpen(500);
+                            if (isDialog) {
+                                iterationNode(null, activity, params);
+                                solo.sleep(config.sleepDuration);
+                            }
                             fragmentTabHost.setCurrentTab(tab);
                         }
                     });
                 } catch (IllegalStateException ignored){}
                 Log.d(LOG_TAG, "FragmentTabHost setCurrentTab(" + i + ")");
-                solo.sleep(config.sleepDuration * 4);
+                solo.sleep(config.sleepDuration * 8);
                 if (isUiAutomation) {
                     handleViewPager(activity, params, true);
                 }
@@ -148,6 +153,11 @@ class Handler {
                     viewPager.post(new Runnable() {
                         @Override
                         public void run() {
+                            boolean isDialog = solo.waitForDialogToOpen(500);
+                            if (isDialog) {
+                                iterationNode(null, activity, params);
+                                solo.sleep(config.sleepDuration);
+                            }
                             viewPager.setCurrentItem(tab);
                         }
                     });

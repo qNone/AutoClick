@@ -12,28 +12,13 @@ import org.junit.Before;
 public class Iteration extends ActivityInstrumentationTestCase2 {
 
     /**
-     * 被测应用包名
-     */
-    private static final String PACKAGE = "被测应用包名";
-
-    /**
      * 被测应用Activity入口
      */
     private static final String LAUNCHER_ACTIVITY = "被测应用Activity入口";
 
-    private static Class<?> launcherActivityClass;
-
-    static {
-        try {
-            launcherActivityClass = Class.forName(LAUNCHER_ACTIVITY);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @SuppressWarnings("unchecked")
-    public Iteration() {
-        super(PACKAGE, launcherActivityClass);
+    public Iteration() throws ClassNotFoundException {
+        super(Class.forName(LAUNCHER_ACTIVITY));
     }
 
     private Solo solo;
@@ -43,6 +28,7 @@ public class Iteration extends ActivityInstrumentationTestCase2 {
         Solo.Config config = new Solo.Config();
         // 遍历模式
         config.mode = Solo.Config.Mode.REPTILE;
+        config.commandLogging = true;
         config.homeActivity = "被测应用主页Activity";
         config.loginActivity = "被测应用登录Activity";
         config.loginAccount = "登录帐号";
@@ -65,7 +51,7 @@ public class Iteration extends ActivityInstrumentationTestCase2 {
      * 登录操作
      * @throws Exception 抛出异常
      */
-    public void test_login() throws Exception {
+    public void test_00_login() throws Exception {
         solo.login();
     }
 
@@ -73,7 +59,7 @@ public class Iteration extends ActivityInstrumentationTestCase2 {
      * 自动遍历入口
      * @throws Exception 抛出异常
      */
-    public void test_iteration() throws Exception {
+    public void test_01_iteration() throws Exception {
         solo.startIteration();
     }
 
