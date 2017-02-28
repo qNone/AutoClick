@@ -737,7 +737,7 @@ class Handler {
         if (node != null && node.isClickable()) {
             String string = getBoundsInScreen(node);
             boolean clicked = mClickedSingleton.containsForNode(string);
-            boolean status = viewInIgnoreViews(node.getViewIdResourceName());
+            boolean status = viewInIgnoreViews(node);
             if (!clicked && !status) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.canOpenPopup()) iterationNode(null, activity, params);
                 if (node.getClassName().toString().contains("android.widget.EditText")) {
@@ -771,10 +771,11 @@ class Handler {
         return "";
     }
 
-    private boolean viewInIgnoreViews(String string){
-        if (string == null) return false;
+    private boolean viewInIgnoreViews(AccessibilityNodeInfo node){
+        if (node == null) return false;
         for (String s: config.ignoreViews) {
-            if (s.contains(string)) return true;
+            if (s.contains(node.getViewIdResourceName()) ||
+                    s.contains(node.getClassName() + "/" + node.getText())) return true;
         }
         return false;
     }
