@@ -29,6 +29,7 @@ public class Iteration extends ActivityInstrumentationTestCase2 {
         // 遍历模式
         config.mode = Solo.Config.Mode.REPTILE;
         config.commandLogging = true;
+        config.isWebForHomeActivity = false;
         config.homeActivity = "被测应用主页Activity";
         config.loginActivity = "被测应用登录Activity";
         config.loginAccount = "登录帐号";

@@ -162,6 +162,8 @@ public class Solo extends com.robotium.solo.Solo{
          */
         public String homeActivity;
 
+        public boolean isWebForHomeActivity = false;
+
         /**
          * Application login activity.
          */
@@ -618,7 +620,7 @@ public class Solo extends com.robotium.solo.Solo{
         waitForActivity(strings[strings.length - 1]);
         sleep(config.sleepDuration * 10);
         if (config.newReptile) {
-            handler.iteration(config.homeActivity, null, true, false);
+            handler.iteration(config.homeActivity, null, true, config.isWebForHomeActivity);
             loopReptile();
         } else {
             throwException();
