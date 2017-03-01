@@ -195,7 +195,7 @@ class Handler {
             for (int i = 0; i < scrollView.getChildCount(); i ++){
                 View view = scrollView.getChildAt(i);
                 Log.d(Solo.LOG_TAG, "ScrollView child: " + view);
-                if (view != null) {
+                if (view != null && view.isClickable()) {
                     if (!(view instanceof RelativeLayout) && view instanceof ViewGroup)
                         loopScrollView(view, activity, params);
                     else {
@@ -657,7 +657,6 @@ class Handler {
      * if not returned after the target activity is to restart the target activity
      */
     private boolean handleJump(Activity context, String activity, Map<String, Object> params) throws Exception{
-        solo.sleep(200);
         ComponentName cn = getRunningTask(context);
         String pkg = cn.getPackageName();
         String act = cn.getClassName();
@@ -960,6 +959,8 @@ class Handler {
             }
         } else
             Log.w(LOG_TAG, activity + " WebUrl is null, " + "timeout.");
+
+        iterationNode(null, activity, params);
     }
 
     /**
