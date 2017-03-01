@@ -55,7 +55,10 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
     }
 
     void takeScreenshotForUiAutomation(String activity) {
-        Bitmap bitmap = instrumentation.getUiAutomation().takeScreenshot();
+        Bitmap bitmap = null;
+        try {
+            bitmap = instrumentation.getUiAutomation().takeScreenshot();
+        }catch (Exception ignored){}
         if (bitmap != null) {
             saveFile(activity, bitmap, 100);
             bitmap.recycle();
@@ -63,7 +66,10 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
     }
 
     private Bitmap watermarkForRect(Rect rect) {
-        Bitmap bitmap = instrumentation.getUiAutomation().takeScreenshot();
+        Bitmap bitmap = null;
+        try {
+            bitmap = instrumentation.getUiAutomation().takeScreenshot();
+        } catch (Exception ignored){}
         if (bitmap != null) {
             int w = bitmap.getWidth();
             int h = bitmap.getHeight();
