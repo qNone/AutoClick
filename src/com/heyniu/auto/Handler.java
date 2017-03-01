@@ -657,6 +657,7 @@ class Handler {
      * if not returned after the target activity is to restart the target activity
      */
     private boolean handleJump(Activity context, String activity, Map<String, Object> params) throws Exception{
+        solo.sleep(200);
         ComponentName cn = getRunningTask(context);
         String pkg = cn.getPackageName();
         String act = cn.getClassName();
@@ -737,7 +738,7 @@ class Handler {
         if (node != null && node.isClickable()) {
             String string = getBoundsInScreen(node);
             boolean clicked = mClickedSingleton.containsForNode(string);
-            boolean status = viewInIgnoreViews(node);
+            boolean status = viewInIgnoreViews(node.getViewIdResourceName(), node.getClassName() + "/" + node.getText());
             if (!clicked && !status) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && node.canOpenPopup()) iterationNode(null, activity, params);
                 if (node.getClassName().toString().contains("android.widget.EditText")) {
@@ -771,11 +772,10 @@ class Handler {
         return "";
     }
 
-    private boolean viewInIgnoreViews(AccessibilityNodeInfo node){
-        if (node == null) return false;
+    private boolean viewInIgnoreViews(String string, String text){
+        if (string == null) return false;
         for (String s: config.ignoreViews) {
-            if (s.contains(node.getViewIdResourceName()) ||
-                    s.contains(node.getClassName() + "/" + node.getText())) return true;
+            if (s.contains(string) || s.contains(text)) return true;
         }
         return false;
     }
