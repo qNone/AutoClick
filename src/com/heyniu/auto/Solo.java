@@ -20,7 +20,6 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.robotium.solo.Timeout;
 import com.robotium.solo.WebElement;
@@ -611,6 +610,7 @@ public class Solo extends com.robotium.solo.Solo{
         sleep(config.sleepDuration * 6);
         if (config.mode == Config.Mode.FAST) Notification.showToast(instrumentation, Notification.FAST_MESSAGE);
         if (config.mode == Config.Mode.NORMAL) Notification.showToast(instrumentation, Notification.NORMAL_MESSAGE);
+        new InitAnimation(instrumentation, getCurrentActivity()).init();
         if (!FileUtils.existsJson()) {
             JsonParser.createJson();
         }
@@ -626,6 +626,7 @@ public class Solo extends com.robotium.solo.Solo{
         waitForActivity(strings[strings.length - 1]);
         sleep(config.sleepDuration * 10);
         Notification.showToast(instrumentation, Notification.REPTILE_MESSAGE);
+        new InitAnimation(instrumentation, getCurrentActivity()).init();
         if (config.newReptile) {
             handler.iteration(config.homeActivity, null, true, config.isWebForHomeActivity);
             loopReptile();
@@ -645,6 +646,7 @@ public class Solo extends com.robotium.solo.Solo{
         sleep(5000);
         Notification.sendNotification(instrumentation, getCurrentActivity().getClass(), Notification.RECORD_MESSAGE);
         Notification.showToast(instrumentation, Notification.RECORD_MESSAGE);
+        new InitAnimation(instrumentation, getCurrentActivity()).init();
         sleep(3600 * 1000);
     }
 
