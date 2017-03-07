@@ -608,9 +608,9 @@ public class Solo extends com.robotium.solo.Solo{
         String[] strings = config.homeActivity.split("\\.");
         waitForActivity(strings[strings.length - 1]);
         sleep(config.sleepDuration * 6);
+        new InitAnimation(instrumentation, getCurrentActivity()).init();
         if (config.mode == Config.Mode.FAST) Notification.showToast(instrumentation, Notification.FAST_MESSAGE);
         if (config.mode == Config.Mode.NORMAL) Notification.showToast(instrumentation, Notification.NORMAL_MESSAGE);
-        new InitAnimation(instrumentation, getCurrentActivity()).init();
         if (!FileUtils.existsJson()) {
             JsonParser.createJson();
         }
@@ -625,8 +625,8 @@ public class Solo extends com.robotium.solo.Solo{
         String[] strings = config.homeActivity.split("\\.");
         waitForActivity(strings[strings.length - 1]);
         sleep(config.sleepDuration * 10);
-        Notification.showToast(instrumentation, Notification.REPTILE_MESSAGE);
         new InitAnimation(instrumentation, getCurrentActivity()).init();
+        Notification.showToast(instrumentation, Notification.REPTILE_MESSAGE);
         if (config.newReptile) {
             handler.iteration(config.homeActivity, null, true, config.isWebForHomeActivity);
             loopReptile();
@@ -644,9 +644,9 @@ public class Solo extends com.robotium.solo.Solo{
     private void recordMode() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) Assert.fail("The current api version less than 14.");
         sleep(5000);
+        new InitAnimation(instrumentation, getCurrentActivity()).init();
         Notification.sendNotification(instrumentation, getCurrentActivity().getClass(), Notification.RECORD_MESSAGE);
         Notification.showToast(instrumentation, Notification.RECORD_MESSAGE);
-        new InitAnimation(instrumentation, getCurrentActivity()).init();
         sleep(3600 * 1000);
     }
 
