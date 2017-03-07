@@ -40,7 +40,7 @@ class Notification {
         builder.setContentText(message);
         builder.setContentIntent(pendingIntent);
         builder.setLargeIcon(bitmap);
-        builder.setSmallIcon(android.R.drawable.star_on);
+        builder.setSmallIcon(android.R.drawable.stat_sys_download);
         builder.setAutoCancel(true);
         NotificationManager manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         android.app.Notification notify = builder.build();
