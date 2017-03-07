@@ -12,6 +12,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -23,6 +25,7 @@ class InitAnimation {
 
     private RelativeLayout relativeLayout;
     private TextView textView;
+    private ScaleAnimation scaleAnimation;
 
     private final int UPDATE_UI = 1000;
     private final int ADD_VIEW = 1001;
@@ -46,6 +49,7 @@ class InitAnimation {
                         addView();
                         break;
                     case IGNORE_VIEW:
+                        textView.clearAnimation();
                         relativeLayout.setVisibility(View.GONE);
                         break;
                     default:
@@ -53,6 +57,7 @@ class InitAnimation {
                 }
             }
         };
+        initAnimation();
         handler.sendEmptyMessage(ADD_VIEW);
     }
 
@@ -67,6 +72,13 @@ class InitAnimation {
         SystemClock.sleep(500);
     }
 
+    private void initAnimation() {
+        scaleAnimation = new ScaleAnimation(1.0f, 2.0f, 1.0f, 2.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        scaleAnimation.setDuration(1000);
+        scaleAnimation.setFillAfter(false);
+        scaleAnimation.setRepeatCount(countDown);
+    }
+
     private void addView() {
         Window window = proxyActivity.getWindow();
         ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -78,6 +90,7 @@ class InitAnimation {
         textView.setTextSize(100);
         textView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
         textView.setLayoutParams(params);
+        textView.startAnimation(scaleAnimation);
         relativeLayout.addView(textView);
         window.addContentView(relativeLayout, params);
     }
