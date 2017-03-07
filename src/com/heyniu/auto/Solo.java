@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.robotium.solo.Timeout;
 import com.robotium.solo.WebElement;
@@ -162,6 +163,9 @@ public class Solo extends com.robotium.solo.Solo{
          */
         public String homeActivity;
 
+        /**
+         * If the application home page is hybrid, set true. Default is false.
+         */
         public boolean isWebForHomeActivity = false;
 
         /**
@@ -605,6 +609,8 @@ public class Solo extends com.robotium.solo.Solo{
         String[] strings = config.homeActivity.split("\\.");
         waitForActivity(strings[strings.length - 1]);
         sleep(config.sleepDuration * 6);
+        if (config.mode == Config.Mode.FAST) Notification.showToast(instrumentation, Notification.FAST_MESSAGE);
+        if (config.mode == Config.Mode.NORMAL) Notification.showToast(instrumentation, Notification.NORMAL_MESSAGE);
         if (!FileUtils.existsJson()) {
             JsonParser.createJson();
         }
@@ -619,6 +625,7 @@ public class Solo extends com.robotium.solo.Solo{
         String[] strings = config.homeActivity.split("\\.");
         waitForActivity(strings[strings.length - 1]);
         sleep(config.sleepDuration * 10);
+        Notification.showToast(instrumentation, Notification.REPTILE_MESSAGE);
         if (config.newReptile) {
             handler.iteration(config.homeActivity, null, true, config.isWebForHomeActivity);
             loopReptile();
@@ -635,6 +642,9 @@ public class Solo extends com.robotium.solo.Solo{
      */
     private void recordMode() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) Assert.fail("The current api version less than 14.");
+        sleep(5000);
+        Notification.sendNotification(instrumentation, getCurrentActivity().getClass(), Notification.RECORD_MESSAGE);
+        Notification.showToast(instrumentation, Notification.RECORD_MESSAGE);
         sleep(3600 * 1000);
     }
 
