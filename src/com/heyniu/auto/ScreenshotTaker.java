@@ -85,6 +85,7 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
             cv.drawRect(rect, paint);
             cv.save(Canvas.ALL_SAVE_FLAG);
             cv.restore();
+            bitmap.recycle();
             return newb;
         }
         return null;

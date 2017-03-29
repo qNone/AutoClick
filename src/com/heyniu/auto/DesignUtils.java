@@ -14,7 +14,7 @@ class DesignUtils {
      * @return dp
      */
     static int px2dip(Context context, float pxValue) {
-        final float scale = context.getResources().getDisplayMetrics().density;
+        final float scale = context.getApplicationContext().getResources().getDisplayMetrics().density;
         return (int) (pxValue / scale + 0.5f);
     }
 
