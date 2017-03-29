@@ -78,7 +78,7 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
             paint.setAntiAlias(true);
             paint.setColor(Color.RED);
             paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(DesignUtils.px2dip(instrumentation.getContext(), 25));
+            paint.setStrokeWidth(DesignUtils.px2dip(instrumentation.getTargetContext(), 25));
             Bitmap newb = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas cv = new Canvas(newb);
             cv.drawBitmap(bitmap, 0, 0, null);
@@ -171,9 +171,9 @@ class ScreenshotTaker extends com.robotium.solo.ScreenshotTaker{
         Bitmap newb = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         Canvas cv = new Canvas(newb);
         cv.drawBitmap(bitmap, 0, 0, null);
-        cv.drawCircle(watermark_x, watermark_y, DesignUtils.px2dip(instrumentation.getContext(), 120), paint);
+        cv.drawCircle(watermark_x, watermark_y, DesignUtils.px2dip(instrumentation.getTargetContext(), 120), paint);
         paint.setAlpha(100);
-        cv.drawCircle(watermark_x, watermark_y, DesignUtils.px2dip(instrumentation.getContext(), 200), paint);
+        cv.drawCircle(watermark_x, watermark_y, DesignUtils.px2dip(instrumentation.getTargetContext(), 200), paint);
         cv.save(Canvas.ALL_SAVE_FLAG);
         cv.restore();
         return newb;
