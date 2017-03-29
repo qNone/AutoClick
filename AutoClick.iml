@@ -12,9 +12,7 @@
   </component>
   <component name="FacetManager">
     <facet type="android" name="Android">
-      <configuration>
-        <option name="CUSTOM_DEBUG_KEYSTORE_PATH" value="file://D:/szhomebbs.keystore" />
-      </configuration>
+      <configuration />
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="false">
@@ -27,9 +25,9 @@
     <orderEntry type="jdk" jdkName="Android API 25 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="junit-4.12" level="project" />
-    <orderEntry type="library" name="gson-2.3" level="project" />
-    <orderEntry type="library" name="support-v4-23.3.0" level="project" />
-    <orderEntry type="library" name="recyclerview-v7-23.3.0" level="project" />
     <orderEntry type="library" name="robotium-solo-5.6.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="recyclerview-v7-23.3.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="support-v4-23.3.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="gson-2.3" level="project" />
   </component>
 </module>
