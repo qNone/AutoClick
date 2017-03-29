@@ -30,7 +30,7 @@ class InitAnimation {
     private final int ADD_VIEW = 1001;
     private final int REMOVE_VIEW = 1002;
     private String message = "";
-    private int countDown = 30;
+    private int countDown = 3;
 
     InitAnimation(Instrumentation instrumentation, Activity proxyActivity) {
         this.context = instrumentation.getTargetContext();
